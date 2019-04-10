@@ -10,6 +10,44 @@ import { OXLABELS_HEIGHT, CHART_GRID_PADDING, GRID_LINES_COUNT } from '../consts
 const Y_ANIMATION_TIME = 300;
 const OY_LABELS_MARGIN_TOP = -10;
 
+function MyNumber(value) {
+  this.value = value;
+}
+MyNumber.prototype.get = function() {
+  return this.value;
+};
+MyNumber.prototype.set = function(newValue, duration=0) {
+  if (duration <= 0) { this.value = newValue;return; }
+
+  this.duration = duration * 1000;
+  this.started = performance.now();
+  this.from = this.value;
+  this.to = newValue;
+  this.nextTick();
+};
+MyNumber.prototype.nextTick = function() {
+  if (this.started) {
+    var p = (performance.now() - this.started)/this.duration;
+    if (p > 1) p = 1;
+    this.value = this.from + (this.to - this.from) * p;
+    if (p === 1) this.started = false;
+  }
+};
+
+var m = new MyNumber(5);
+console.log(m.get());
+m.set(6);
+console.log(m.get());
+m.nextTick();
+console.log(m.get());
+m.set(80, 1);
+console.log(m.get());
+m.nextTick();
+
+setTimeout(function() {
+  console.log(m.get());
+}, 500)
+
 // main();
 
 export function barChart(w, h, data) {
@@ -45,21 +83,31 @@ export function barChart(w, h, data) {
   var oldOyLabels = { alpha: 0, offsetY: 0, labels: [0, 1, 2, 3, 4, 5, 6] };
   var newOyLabels = { alpha: 1, offsetY: 0, labels: [0, 1, 2, 3, 4, 5, 6] };
 
+  var oyAnimate = false;
+  var oxAnimate = false;
+
+  var animations = new Animations();
+  animations.add('oy', false);
+  animations.add('ox', false);
+
   me.draw = function() {
-    // if (!me.needToUpdate) return;
+    requestAnimationFrame(function() {
+      console.log('barchart drawww', me.leftX);
 
-    console.log('barchart drawww', me.leftX);
+      ctx.clearRect(0, 0, w, h);
 
-    ctx.clearRect(0, 0, w, h);
+      drawBg();
+      drawBars();
+      // me.needToUpdate = false;
 
-    drawBg();
-    drawBars();
-    // me.needToUpdate = false;
-    // requestAnimationFrame(me.draw);
+      // if (animations.isAnimate()) {
+      //   me.draw();
+      // }
+    });
   }
 
   me.update = function() {
-    // console.log('update');
+    console.log('update');
 
     startInd = Math.floor(me.previewLeftX * dataLength);
     endInd = Math.ceil(me.previewRightX * dataLength);
@@ -79,12 +127,35 @@ export function barChart(w, h, data) {
     // setYCoords(getYCoords(bottomY, values, oyLabels.splice(-1, 1)));
 
     if (currMaxY !== maxY) {
-      // currMaxY = maxY;
       updateY(maxY);
     }
 
+    /*
+
+    startInd = Math.floor(me.previewLeftX * dataLength);
+    endInd = Math.ceil(me.previewRightX * dataLength);
+    barWidth = w/(dataLength*(me.previewRightX-me.previewLeftX));
+    offsetX = -barWidth * (dataLength*me.previewLeftX - startInd);
+
+    var maxY = getMax(values.slice(startInd, endInd));
+
+    xCoords = getXCoords(w, oxLabels.slice(startInd, endInd), barWidth, offsetX);
+
+    yCoords.nextTick();
+    oldOyLabels.alpha.nextTick();
+    oldOyLabels.offsetY.nextTick();
+    newOyLabels.alpha.nextTick();
+    newOyLabels.offsetY.nextTick();
+
+    oldOxLabels.alpha.nextTick();
+    newOxLabels.alpha.nextTick();
+
+    me.draw();
+
+    */
+
     // me.draw(); // Call here requestAnimationFrame
-    me.needToUpdate = true;
+    // me.needToUpdate = true;
   }
 
   var updateY = debounce(function(max) {
@@ -103,6 +174,8 @@ export function barChart(w, h, data) {
     var toA = Y.concat(-1, k*gridLinesHeight/2, 1, 0);
     var i = yCoords.length;
 
+    // animations.anims.oy = true;
+
     animateArray(
       fromA, toA, Y_ANIMATION_TIME,
       function(values) {
@@ -112,43 +185,14 @@ export function barChart(w, h, data) {
         newOyLabels.alpha = values[i+2];
         newOyLabels.offsetY = values[i+3];
         me.draw();
-      }
+      },
+      // function() {
+      //   animations.anims.oy = false;
+      // }
     );
 
     k = (k === 1) ? 0 : 1;
   }, 300);
-
-  // function animateY(fromY, toY, duration) {
-  //   var start = performance.now();
-  //
-  //   function update() {
-  //     var p = (performance.now() - start) / duration;
-  //     if (p > 1) p = 1;
-  //     yCoords = fromY.map((from, i) => from + (toY[i]-from)*p);
-  //     me.draw();
-  //     if (p < 1) requestAnimationFrame(update);
-  //   }
-  //   requestAnimationFrame(update);
-  // }
-
-  function animateArray(fromA, toA, duration, cb, onFinishCb) {
-    var start = performance.now();
-
-    var A = fromA;
-
-    function update() {
-      var p = (performance.now() - start) / duration;
-      if (p > 1) p = 1;
-      A = fromA.map((a, i) => a + (toA[i]-a)*p);
-      cb(A);
-      if (p === 1) {
-        if (onFinishCb) onFinishCb();
-        return;
-      }
-      requestAnimationFrame(update);
-    }
-    requestAnimationFrame(update);
-  }
 
   function drawBg() {
     console.log('draw bg');
@@ -230,4 +274,34 @@ function getYCoords(height, Y, max) {
     coords.push(height - (Y[i]/max) * height)
   }
   return coords;
+}
+
+function animateArray(fromA, toA, duration, cb, onFinishCb) {
+  var start = performance.now();
+
+  var A = fromA;
+  function update() {
+    var p = (performance.now() - start) / duration;
+    if (p > 1) p = 1;
+    A = fromA.map((a, i) => a + (toA[i]-a)*p);
+    cb(A);
+    if (p === 1) {
+      if (onFinishCb) onFinishCb();
+      return;
+    }
+    requestAnimationFrame(update);
+  }
+  requestAnimationFrame(update);
+}
+
+function Animations() {
+  this.anims = {};
+}
+Animations.prototype.add = function(name, value) {
+  this.anims[name] = value;
+}
+Animations.prototype.isAnimate = function() {
+  return Object.values(this.anims).reduce(function(acc, curr) {
+    return acc || curr;
+  }, false);
 }
