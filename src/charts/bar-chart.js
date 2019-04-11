@@ -8,7 +8,7 @@ import {
 import { OXLABELS_HEIGHT, CHART_GRID_PADDING, GRID_LINES_COUNT } from '../consts';
 
 const Y_ANIMATION_TIME = 0.3;
-const OX_LABELS_ANIMATION_DURATION = 0.8;
+const OX_LABELS_ANIMATION_DURATION = 0.5;
 const OY_LABELS_MARGIN_TOP = -10;
 
 export function barChart(w, h, data) {
@@ -128,15 +128,6 @@ export function barChart(w, h, data) {
       staticOxLabels.step = currStepOxLabelsStep*2;
       dynamicOxLabels.step = currStepOxLabelsStep*2;
     }
-
-    var staticLastInd = oxLabels.length-1;
-    while(staticLastInd > endInd-1) staticLastInd -= staticOxLabels.step;
-
-    var dynamicLastInd = oxLabels.length - 1 - dynamicOxLabels.step/2;
-    while(dynamicLastInd > endInd-1) dynamicLastInd -= dynamicOxLabels.step;
-
-    staticOxLabels.lastInd = staticLastInd;
-    dynamicOxLabels.lastInd = dynamicLastInd;
   }
 
   var updateY = debounce(function(max) {
@@ -174,20 +165,22 @@ export function barChart(w, h, data) {
   function drawBg() {
     // console.log('draw bg');
 
-    drawOxLabels(staticOxLabels);
-    drawOxLabels(dynamicOxLabels);
+    drawOxLabels(staticOxLabels, oxLabels.length - 1);
+    drawOxLabels(dynamicOxLabels, oxLabels.length - 1 - dynamicOxLabels.step/2); // Говно какое-то
     drawOyLabels(oldOyLabels);
     drawOyLabels(newOyLabels);
   }
 
-  function drawOxLabels(oxLabelsProps) {
+  function drawOxLabels(oxLabelsProps, lastInd) {
     // console.log('draw ox labels');
+
+    while(lastInd > endInd-1) lastInd -= oxLabelsProps.step;
 
     ctx.beginPath();
     ctx.globalAlpha = oxLabelsProps.alpha.value;
     ctx.fillStyle = 'black'; // FIXME color to consts
 
-    for (var i = oxLabelsProps.lastInd; i >= startInd; i-=oxLabelsProps.step) {
+    for (var i = lastInd; i >= startInd; i-=oxLabelsProps.step) {
       var labelOffsetX = (barWidth - ctx.measureText(oxLabels[i]).width) / 2;
       var x = (i - startInd) * barWidth + offsetX + labelOffsetX;
       ctx.fillText(oxLabels[i], x, h - OXLABELS_HEIGHT/2);
@@ -239,12 +232,6 @@ export function barChart(w, h, data) {
     7. 1 0 0 0 1
 
     */
-
-    // for (var i = lastInd, k=0; i >= startInd; i-=step, k++) {
-    //   var labelOffsetX = (barWidth - ctx.measureText(oxLabels[i]).width) / 2;
-    //   var x = (i - startInd) * barWidth + offsetX + labelOffsetX;
-    //   ctx.fillText(oxLabels[i], x, h - OXLABELS_HEIGHT/2);
-    // }
   }
 
   function drawOyLabels(oyLabels) {
@@ -269,7 +256,7 @@ export function barChart(w, h, data) {
   function drawBars() {
     // console.log('draw bars');
     ctx.beginPath();
-    ctx.globalAlpha = 0.4; // FIXME Color to const
+    ctx.globalAlpha = 0.4; // FIXME Alpha to const
     var Y = yCoords.values.slice(startInd, endInd);
     for (var i = 0; i < xCoords.length; i++) {
       ctx.rect(xCoords[i], Y[i].value, barWidth, bottomY - Y[i].value);

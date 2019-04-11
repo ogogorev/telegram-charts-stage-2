@@ -37,6 +37,7 @@ function preview(w, h) {
       canvas.onupdate(state);
     }
   }
+  updateState();
 
   function draw() {
     ctx.clearRect(0, 0, w, h);
