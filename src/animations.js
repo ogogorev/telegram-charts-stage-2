@@ -11,15 +11,58 @@ export function main() {
 
 }
 
-export function AnimatedValue(value, duration=0) {
+export function AnimatedValue(value, duration=0.5) {
   this.value = value;
   this.duration = duration * 1000;
-  this.isAnimate = false;
+  this.ease = function(t) {
+    return t*(2-t);
+  }
 }
+AnimatedValue.prototype.set = function(newValue, now=performance.now(), animated=false) {
+  if (!animated) { this.value = newValue;return; }
 
-AnimatedValue.prototype.set = function(newValue, duration=0) {
-  this.value = newValue;
+  this.started = now;
+  this.from = this.value;
+  this.to = newValue;
+  this.nextTick();
+};
+AnimatedValue.prototype.nextTick = function(now, name) {
+  if (this.started) {
+    // var p = (performance.now() - this.started)/this.duration;
+    if (name) console.log('name', name);
+    var p = (now - this.started)/this.duration;
+    if (p > 1) p = 1;
+    this.value = this.from + (this.to - this.from) * this.ease(p);
+    if (p === 1) this.started = false;
+    return true;
+  }
+  else {
+    return false;
+  }
+};
+
+export function AnimatedArray(values) {
+  this.values = values;
 }
+AnimatedArray.prototype.nextTick = function(now) {
+  var res = false;
+  for (var i = 0; i < this.values.length; i++) {
+    if (this.values[i].nextTick(now)) {
+      res = true
+    }
+  }
+  return res;
+};
+
+// export function AnimatedValue(value, duration=0) {
+//   this.value = value;
+//   this.duration = duration * 1000;
+//   this.isAnimate = false;
+// }
+//
+// AnimatedValue.prototype.set = function(newValue, duration=0) {
+//   this.value = newValue;
+// }
 
 // AnimatedValue.prototype.animate = function(newValue, duration) {
 //   this.from = this.value;
@@ -66,21 +109,39 @@ AnimatedValue.prototype.set = function(newValue, duration=0) {
 //   };
 // }
 
-AnimatedValue.prototype.animate = function(newValue, duration) {
-  this.from = this.value;
-  this.to = newValue;
-  if (duration) this.duration = duration*1000;
-  this.isAnimate = true;
+// AnimatedValue.prototype.animate = function(newValue, duration) {
+//   this.from = this.value;
+//   this.to = newValue;
+//   if (duration) this.duration = duration*1000;
+//   this.isAnimate = true;
+//
+//   var start = performance.now();
+//
+//   function update() {
+//     var p = (performance.now() - start) / this.duration;
+//     if (p > 1) p = 1;
+//     //TODO Eading here
+//     this.value = this.from + (this.to - this.from) * p;
+//     // console.log(this.value);
+//     if (p < 1) requestAnimationFrame(update.bind(this));
+//   };
+//   requestAnimationFrame(update.bind(this));
+// }
 
-  var start = performance.now();
-
-  function update() {
-    var p = (performance.now() - start) / this.duration;
-    if (p > 1) p = 1;
-    //TODO Eading here
-    this.value = this.from + (this.to - this.from) * p;
-    // console.log(this.value);
-    if (p < 1) requestAnimationFrame(update.bind(this));
-  };
-  requestAnimationFrame(update.bind(this));
-}
+// function animateArray(fromA, toA, duration, cb, onFinishCb) {
+//   var start = performance.now();
+//
+//   var A = fromA;
+//   function update() {
+//     var p = (performance.now() - start) / (duration*1000);
+//     if (p > 1) p = 1;
+//     A = fromA.map((a, i) => a + (toA[i]-a)*p);
+//     cb(A);
+//     if (p === 1) {
+//       if (onFinishCb) onFinishCb();
+//       return;
+//     }
+//     requestAnimationFrame(update);
+//   }
+//   requestAnimationFrame(update);
+// }

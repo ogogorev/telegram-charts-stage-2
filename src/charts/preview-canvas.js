@@ -68,8 +68,13 @@ function preview(w, h) {
         leftX = e.clientX + offsetLeftX;
         if (leftX > rightX - PREVIEW_MIN_WIDTH) leftX = rightX - PREVIEW_MIN_WIDTH;
         else if (leftX < 0) leftX = 0;
-        requestAnimationFrame(draw);
-        updateState();
+        // requestAnimationFrame(draw);
+        // updateState();
+
+        requestAnimationFrame(function() {
+          draw();
+          updateState();
+        });
       };
     }
     else if (isCentralZone(e.offsetX)) {
@@ -81,8 +86,13 @@ function preview(w, h) {
         if (leftX < 0) leftX = 0;
         if (leftX > w - currWidth) leftX = w - currWidth;
         rightX = leftX + currWidth;
-        requestAnimationFrame(draw);
-        updateState();
+        // requestAnimationFrame(draw);
+        // updateState();
+
+        requestAnimationFrame(function() {
+          draw();
+          updateState();
+        });
       };
     }
     else if (isRightZone(e.offsetX)) {
@@ -92,8 +102,13 @@ function preview(w, h) {
         rightX = e.clientX + offsetRightX;
         if (rightX < leftX + PREVIEW_MIN_WIDTH) rightX = leftX + PREVIEW_MIN_WIDTH;
         else if (rightX > w) rightX = w;
-        requestAnimationFrame(draw);
-        updateState();
+        // requestAnimationFrame(draw);
+        // updateState();
+
+        requestAnimationFrame(function() {
+          draw();
+          updateState();
+        });
       };
     }
 
