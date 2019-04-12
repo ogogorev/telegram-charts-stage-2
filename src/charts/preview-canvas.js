@@ -5,24 +5,25 @@ import {
 const PREVIEW_RESIZE_AREA_WIDTH = 10;
 const PREVIEW_MIN_WIDTH = 30;
 
-export function createPreview(w, h, data, onUpdate) {
-  var container = document.createElement('div');
+// export function createPreview(w, h, onUpdate) {
+//   var container = document.createElement('div');
+//   container.id = 'preview container';
+//
+//   var p = preview(w, h);
+//   p.onupdate = function(state) {
+//     onUpdate(state);
+//   }
+//
+//   container.append(chart(w, h));
+//   container.append(p);
+//   return container;
+// }
 
-  var p = preview(w, h);
-  p.onupdate = function(state) {
-    onUpdate(state);
-  }
-
-  container.append(chart(w, h));
-  container.append(p);
-  return container;
-}
-
-function preview(w, h) {
+export function preview(w, h) {
   var canvas = document.createElement('canvas');
   canvas.width = w;
   canvas.height = h;
-  canvas.style.position = 'absolute';
+  // canvas.style.position = 'absolute';
   var ctx = canvas.getContext('2d');
 
   var leftX = (1 - PREVIEW_INIT_W) * w;
@@ -74,8 +75,8 @@ function preview(w, h) {
 
         requestAnimationFrame(function() {
           draw();
-          updateState();
         });
+        updateState();
       };
     }
     else if (isCentralZone(e.offsetX)) {
@@ -92,8 +93,8 @@ function preview(w, h) {
 
         requestAnimationFrame(function() {
           draw();
-          updateState();
         });
+        updateState();
       };
     }
     else if (isRightZone(e.offsetX)) {
@@ -108,8 +109,8 @@ function preview(w, h) {
 
         requestAnimationFrame(function() {
           draw();
-          updateState();
         });
+        updateState();
       };
     }
 
@@ -138,11 +139,11 @@ function preview(w, h) {
 }
 
 // Mock
-function chart(w, h) {
-  var container = document.createElement('div');
-  container.style.width = w + 'px';
-  container.style.height = h + 'px';
-  container.style.position = 'absolute';
-  container.innerHTML = 'chart';
-  return container;
-}
+// function chart(w, h) {
+//   var container = document.createElement('div');
+//   container.style.width = w + 'px';
+//   container.style.height = h + 'px';
+//   container.style.position = 'absolute';
+//   container.innerHTML = 'chart';
+//   return container;
+// }
