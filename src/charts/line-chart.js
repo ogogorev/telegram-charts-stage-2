@@ -158,14 +158,27 @@ export function lineChart(w, h, data) {
     return ind;
   }
 
+  function calculateOffsetX(w, padding, left, right) {
+    return w + padding - right*w/(right-left);
+  }
+
+  // console.log(calculateOffsetX(40, 20, 0.5, 1));
+  // console.log(calculateOffsetX(40, 20, 0.2, 1));
+  // console.log(calculateOffsetX(40, 20, 0, 1));
+
+
   const L = dataLength - 1;
   me.update = function() {
     startInd = Math.floor(me.previewLeftX * L);
-    endInd = Math.ceil(me.previewRightX * L) + 1;
-    barWidth = w/(L*(me.previewRightX-me.previewLeftX));
-    offsetX = -barWidth * (L*me.previewLeftX - startInd);
+    // endInd = Math.ceil(me.previewRightX * L) + 1;
+    endInd = Math.ceil(me.previewRightX * L);
+    // barWidth = w/(L*(me.previewRightX-me.previewLeftX));
+    barWidth = gridWidth/(L*(me.previewRightX-me.previewLeftX));
+    offsetX = calculateOffsetX(gridWidth, CHART_GRID_PADDING, me.previewLeftX, me.previewRightX); // новый
+    // offsetX = -barWidth * (L*me.previewLeftX - startInd);
+    // offsetX = -barWidth * (L*me.previewLeftX - startInd) + CHART_GRID_PADDING;
 
-    var maxY = getMatrixMax(columns.filter(c => c.isOn).map(c => c.values.slice(startInd, endInd)));
+    var maxY = getMatrixMax(columns.filter(c => c.isOn).map(c => c.values.slice(startInd, endInd+1)));
 
     updateOxLabels();
 
@@ -313,11 +326,23 @@ export function lineChart(w, h, data) {
 
   function drawLines() {
     var barW = Math.round(barWidth*round)/round;
+    var sI = Math.max(startInd-1, 0);
+    var eI = Math.min(endInd+1, dataLength-1);
 
-    var X = getXCoords(w, endInd - startInd, barW, Math.round(offsetX*round)/round);
+    // console.log(startInd, endInd);
+    // console.log(sI, eI);
+
+    var X = [];
+    for (var i = sI; i < eI+1; i++) {
+      X.push(getScreenXByInd(i, barW, offsetX));
+    }
+    // var X = getXCoords(w, endInd - startInd, barW, Math.round(offsetX*round)/round);
+    // var X = getXCoords(gridWidth, eI - sI, barW, Math.round(offsetX*round)/round);
 
     for (var i = 0; i < columns.length; i++) {
-      var Y = getYCoords(bottomY, columns[i].values.slice(startInd, endInd), gridMaxY.value);
+      // var Y = getYCoords(bottomY, columns[i].values.slice(startInd, endInd), gridMaxY.value);
+      var Y = getYCoords(bottomY, columns[i].values.slice(sI, eI+1), gridMaxY.value);
+      // console.log(X, Y);
       drawLine(X, Y, colors[i], columns[i].alpha.value);
     }
 
@@ -402,6 +427,10 @@ function getXCoords(width, xLength, step, offset=0) {
     coords.push(Math.round((i*step + offset)*round)/round);
   }
   return coords;
+}
+
+function getScreenXByInd(i, step, offset) {
+  return i*step + offset;
 }
 
 function getYCoords(height, Y, max) { // FIXME Можно удалить, потому что есть getScreenY
