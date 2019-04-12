@@ -49,7 +49,10 @@ export function getGridValuesByMax(max) { // FIXME Отвязать от 6
   return [0, 1, 2, 3, 4, 5, 6].map(i => i*k/5);
 }
 
-function getStepForGridValues(max, k=1) { // FIXME Отвязать от 6
+console.log('sdsdf', getStepForGridValues(91));
+console.log('sdsdf', getGridValuesByMax(getStepForGridValues(91)));
+
+export function getStepForGridValues(max, k=1) { // FIXME Отвязать от 6
   if (max == Number.POSITIVE_INFINITY || max == Number.NEGATIVE_INFINITY) return 0;
 
   if (max > 100) return getStepForGridValues(max/10, k*10);

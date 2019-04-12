@@ -6,6 +6,7 @@ export function createInfo() {
   container.classList.add('point-info');
   container.style.transition = 'opacity ' + INFO_ANIMATION_TIME + 's';
   container.style.opacity = 0;
+  container.style.display = 'none';
 
 
   // container.style.border = 'solder'
@@ -27,11 +28,18 @@ export function createInfo() {
   title.innerHTML = 'Title';
 
   container.appear = function() {
-    container.style.opacity = 1;
+    container.style.display = 'block';
+
+    setTimeout(function() {
+      container.style.opacity = 1;
+    }, 0)
   }
 
   container.disappear = function() {
     container.style.opacity = 0;
+    setTimeout(function() {
+      container.style.display = 'none';
+    }, INFO_ANIMATION_TIME * 1000)
   }
 
   container.setTitle = function(text) {

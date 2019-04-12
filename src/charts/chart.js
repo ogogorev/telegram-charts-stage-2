@@ -2,7 +2,43 @@ import { barChart } from './bar-chart';
 import { preview } from './preview-canvas';
 import { PREVIEW_HEIGHT, CHART_GRID_PADDING } from '../consts';
 
-export function chartBase(w, h, previewW, previewH) {
+export function ChartBase(w, h) {
+  this.w = w;
+  this.h = h;
+  this.container = document.createElement('div');
+  // me.container.id = 'chart container';
+  this.container.style.width = w + 'px';
+  this.container.style.height = h + 'px';
+  this.container.style.position = 'relative';
+
+  this.canvas = document.createElement('canvas');
+  this.canvas.width = w;
+  this.canvas.height = h;
+
+  this.preview = preview(previewW, previewH);
+  this.preview.onupdate = function(state) {
+    this.updateRange(state.left, state.right);
+  } // TODO Pass chart type here, // FIXME remove "0.2"
+  this.preview.style.position = 'absolute';
+  this.preview.style.bottom = 0;
+  this.preview.style.left = CHART_GRID_PADDING + 'px';
+
+  this.previewLeftX = 0;
+  this.previewRightX = 1;
+
+  this.container.append(this.canvas);
+  this.container.append(this.preview);
+}
+
+ChartBase.prototype.draw = function() {}
+ChartBase.prototype.update = function() {}
+ChartBase.prototype.updateRange = function(left, right) {
+  this.previewLeftX = left;
+  this.previewRightX = right;
+  this.update();
+}
+
+export function chartBase(w, h) {
   var me = {};
   me.container = document.createElement('div');
   // me.container.id = 'chart container';
@@ -14,7 +50,7 @@ export function chartBase(w, h, previewW, previewH) {
   me.canvas.width = w;
   me.canvas.height = h;
 
-  me.preview = preview(previewW, previewH);
+  me.preview = preview(w - CHART_GRID_PADDING*2, PREVIEW_HEIGHT);
   me.preview.onupdate = function(state) {
     me.updateRange(state.left, state.right);
   } // TODO Pass chart type here, // FIXME remove "0.2"

@@ -7,6 +7,7 @@ import {
   getMin, getMax,
   getMatrixMax,
   debounce, getGridValuesByMax,
+  getStepForGridValues,
   getDataColumnByName
 } from '../utils';
 import { OXLABELS_HEIGHT, CHART_GRID_PADDING, GRID_LINES_COUNT, PREVIEW_HEIGHT } from '../consts';
@@ -18,11 +19,12 @@ const OY_LABELS_MARGIN_TOP = -10;
 const MINI_CHART_HEIGHT = 50;
 const MINI_CHART_MARGIN = 30;
 
-
 export function lineChart(w, h, data) {
   console.log(data);
-  var me = chartBase(w, h, w - CHART_GRID_PADDING*2, PREVIEW_HEIGHT);
+  var me = chartBase(w, h);
   var ctx = me.canvas.getContext('2d');
+
+  var gridWidth = w - CHART_GRID_PADDING*2;
 
   // data
 
@@ -35,6 +37,7 @@ export function lineChart(w, h, data) {
   var colors = [];
   for (var i = 0; i < columnNames.length; i++) {
     columns.push({
+      id: columnNames[i],
       name: data.names[columnNames[i]],
       isOn: true,
       alpha: new AnimatedValue(1, Y_ANIMATION_TIME),
@@ -43,10 +46,12 @@ export function lineChart(w, h, data) {
     colors.push(data.colors[columnNames[i]]);
   }
 
-  columns.map(c => {
+  var info;
 
-    console.log('column', c.name, getMax(c.values));
-  })
+  // columns.map(c => {
+  //
+  //   console.log('column', c.name, getMax(c.values));
+  // })
 
   // draw props
 
@@ -60,6 +65,7 @@ export function lineChart(w, h, data) {
   var startInd = 0;
   var endInd = 0;
   var selectedInd = -1;
+  var selectedScreenX = 0;
 
   // ox props
 
@@ -87,19 +93,24 @@ export function lineChart(w, h, data) {
   };
 
   function init() {
-    // update
+    initGridMaxY();
     drawMini();
     initInfo();
     initButtons();
     me.update();
   }
 
+  function initGridMaxY() {
+    var max = getStepForGridValues(getMatrixMax(columns.map(c => c.values)));
+    gridMaxY.set(max*6/5);
+  }
+
   function initInfo() {
-    var info = createInfo();
+    info = createInfo();
     for (var i = 0; i < columnNames.length; i++) {
       info.addRow(data.names[columnNames[i]], 0);
     }
-    // me.container.append(info);
+    me.container.append(info);
   }
 
   function initButtons() {
@@ -126,20 +137,23 @@ export function lineChart(w, h, data) {
     }
   }
 
-  // me.canvas.onclick = function(e) {
-  //   if (e.layerY <= bottomY) {
-  //     selectedInd = xToInd(e.layerX);
-  //     info.setTitle(oxLabels[selectedInd]);
-  //     info.setRowValue('Views', values[selectedInd]);
-  //   }
-  //   else {
-  //     selectedInd = -1;
-  //   }
-  //   me.draw();
-  // }
+  me.canvas.onclick = function(e) {
+    if (e.layerY <= bottomY) {
+      selectedScreenX = e.layerX;
+      selectedInd = xToInd(e.layerX);
+      info.setTitle(oxLabels[selectedInd]);
+      columns.forEach(c => {
+        info.setRowValue(c.name, c.values[selectedInd]);
+      });
+    }
+    else {
+      selectedInd = -1;
+    }
+    me.draw();
+  }
 
-  function xToInd(x) { // FIXME Move to base
-    var indOnScreen = Math.floor((x - offsetX)/barWidth);
+  function xToInd(x) {
+    var indOnScreen = Math.round((x - offsetX)/barWidth);
     var ind = startInd + indOnScreen;
     return ind;
   }
@@ -185,15 +199,6 @@ export function lineChart(w, h, data) {
     me.draw();
   }
 
-  function updateGridMaxY() {}
-
-  // var updateY = debounce(function(max) {
-  // var updateY = function(max) {
-  //
-  //   me.draw();
-  // // }, 300);
-  // };
-
   function updateOxLabels() {
     var step = Math.max(1, (endInd-1 - startInd) / countOnScreen);
     var p = 1;
@@ -222,12 +227,13 @@ export function lineChart(w, h, data) {
 
   me.draw = function() {
     requestAnimationFrame(function() {
-      // perf(function() {
       ctx.clearRect(0, 0, w, oxLabelsBottomY);
 
-      var now = performance.now();
+      ctx.beginPath();
+      ctx.rect(0, 0, w, oxLabelsBottomY);
+      ctx.stroke()
 
-      // var needRedraw = yCoords.nextTick(now) |
+      var now = performance.now();
 
       var needRedraw = false;
       var needDrawMini = false;
@@ -243,14 +249,6 @@ export function lineChart(w, h, data) {
       if (newOyLabels.offsetY.nextTick(now)) needRedraw = true;
       if (dynamicOxLabels.alpha.nextTick(now)) needRedraw = true;
 
-
-      // var needRedraw = gridMaxY.nextTick(now) |
-      // oldOyLabels.alpha.nextTick(now) |
-      // oldOyLabels.offsetY.nextTick(now) |
-      // newOyLabels.alpha.nextTick(now) |
-      // newOyLabels.offsetY.nextTick(now) |
-      // dynamicOxLabels.alpha.nextTick(now);
-
       drawBg();
       drawLines();
       if (needDrawMini) {
@@ -260,7 +258,6 @@ export function lineChart(w, h, data) {
       if (needRedraw) {
         me.draw();
       }
-    // });
     });
   }
 
@@ -326,19 +323,36 @@ export function lineChart(w, h, data) {
 
     if (selectedInd >= startInd && selectedInd <= endInd) {
       var ind = selectedInd - startInd;
+      var filteredColumns = columns.filter(c => c.isOn);
+
       ctx.beginPath();
-      ctx.fillStyle = 'black';
-      ctx.rect(X[ind], Y[ind], barWidth, bottomY - Y[ind]);
+      ctx.strokeStyle = '#000000';
+      ctx.moveTo(selectedScreenX, 0);
+      ctx.lineTo(selectedScreenX, bottomY);
+      ctx.stroke();
+
+      ctx.beginPath();
+      ctx.fillStyle = '#FFFFFF'; // FIXME Color
+      filteredColumns.forEach(c => {
+        ctx.arc(Math.floor(X[ind]), Math.floor(getScreenY(bottomY, c.values[selectedInd], gridMaxY.value)), 5.5, 0, 2 * Math.PI);
+      });
       ctx.fill();
+
+      filteredColumns.forEach(c => {
+        ctx.beginPath();
+        ctx.strokeStyle = data.colors[c.id]; // FIXME Color
+        ctx.arc(Math.floor(X[ind]), Math.floor(getScreenY(bottomY, c.values[selectedInd], gridMaxY.value)), 5.5, 0, 2 * Math.PI);
+        ctx.stroke();
+        ctx.closePath();
+      });
 
       info.style.left = X[ind] + (barWidth - info.offsetWidth)/2 + 'px';
       info.style.top = Y[ind] - info.offsetHeight  - 15 + 'px'; // FIXME Info margin
       info.appear();
     }
     else {
-      // info.disappear()
+      info.disappear()
     }
-
   }
 
   function drawLine(X, Y, color, alpha=1) {
@@ -368,10 +382,10 @@ export function lineChart(w, h, data) {
 
     ctx.beginPath();
     var X = getXCoords(miniChartWidth, oxLabels.length, miniChartStep, miniChartX);
-    var max = getMatrixMax(columns.map(c => c.values));
+    // var max = getMatrixMax(columns.map(c => c.values));
 
     for (var i = 0; i < columns.length; i++) {
-      var Y = getYCoords(miniChartHeight, columns[i].values, max).map(y => miniChartY + y);
+      var Y = getYCoords(miniChartHeight, columns[i].values, gridMaxY.value).map(y => miniChartY + y);
       drawLine(X, Y, colors[i], columns[i].alpha.value);
     }
   }
@@ -403,29 +417,5 @@ function getScreenY(height, y, max) {
   return Math.floor(screenY);
 }
 
-var arr = []
-function perf(func, ...args) {
-  var before = performance.now();
-  func(...args);
-  var after = performance.now();
-  arr.push(after - before);
-  // console.warn('PERFORMANCE CHECK, ', func.name, ': ', after - before);
-  showArr()
-  // console.warn(getAverage(arr) ,'PERFORMANCE CHECK, ', func.name, ': ', after - before);
-}
-
-var showArr = debounce(function() {
-  console.log('perf average', getAverage(arr));
-  arr = []
-}, 300);
-
-function getAverage(arr) {
-  return arr.reduce((a, c) => a+c)/arr.length
-}
-
-// perf(foo)
-// perf(foo)
-//
-// function foo() {
-//   console.log('a')
-// }
+// LineChart.prototype = Object.create(ChartBase.prototype);
+// LineChart.prototype.constructor = LineChart;
