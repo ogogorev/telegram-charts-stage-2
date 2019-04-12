@@ -162,21 +162,13 @@ export function lineChart(w, h, data) {
     return w + padding - right*w/(right-left);
   }
 
-  // console.log(calculateOffsetX(40, 20, 0.5, 1));
-  // console.log(calculateOffsetX(40, 20, 0.2, 1));
-  // console.log(calculateOffsetX(40, 20, 0, 1));
-
-
   const L = dataLength - 1;
   me.update = function() {
-    startInd = Math.floor(me.previewLeftX * L);
-    // endInd = Math.ceil(me.previewRightX * L) + 1;
+    // startInd = Math.floor(me.previewLeftX * L);
+    startInd = Math.max(Math.ceil(me.previewLeftX * L) - 1, 0);
     endInd = Math.ceil(me.previewRightX * L);
-    // barWidth = w/(L*(me.previewRightX-me.previewLeftX));
     barWidth = gridWidth/(L*(me.previewRightX-me.previewLeftX));
     offsetX = calculateOffsetX(gridWidth, CHART_GRID_PADDING, me.previewLeftX, me.previewRightX); // новый
-    // offsetX = -barWidth * (L*me.previewLeftX - startInd);
-    // offsetX = -barWidth * (L*me.previewLeftX - startInd) + CHART_GRID_PADDING;
 
     var maxY = getMatrixMax(columns.filter(c => c.isOn).map(c => c.values.slice(startInd, endInd+1)));
 
@@ -213,7 +205,7 @@ export function lineChart(w, h, data) {
   }
 
   function updateOxLabels() {
-    var step = Math.max(1, (endInd-1 - startInd) / countOnScreen);
+    var step = Math.max(1, (endInd - startInd + 1) / countOnScreen);
     var p = 1;
     while (step > p) p *= 2;
     step = p;
@@ -284,13 +276,13 @@ export function lineChart(w, h, data) {
   const labelWidthHalf = 15;
   function drawOxLabels(oxLabelsProps, lastInd) {
     if (oxLabelsProps.alpha.value <= 0) return;
-    while(lastInd > endInd-1) lastInd -= oxLabelsProps.step;
+    while(lastInd > endInd) lastInd -= oxLabelsProps.step;
 
     ctx.beginPath();
     ctx.globalAlpha = oxLabelsProps.alpha.value;
     ctx.fillStyle = 'black'; // FIXME color to consts
 
-    var offset = -startInd * barWidth + offsetX - labelWidthHalf;
+    var offset = offsetX - labelWidthHalf;
     for (var i = lastInd; i >= startInd; i-=oxLabelsProps.step) {
       ctx.fillText(oxLabels[i], Math.floor(i * barWidth + offset), oxLabelsBottomY - OXLABELS_HEIGHT/2);
     }
@@ -329,24 +321,18 @@ export function lineChart(w, h, data) {
     var sI = Math.max(startInd-1, 0);
     var eI = Math.min(endInd+1, dataLength-1);
 
-    // console.log(startInd, endInd);
-    // console.log(sI, eI);
-
     var X = [];
     for (var i = sI; i < eI+1; i++) {
       X.push(getScreenXByInd(i, barW, offsetX));
     }
-    // var X = getXCoords(w, endInd - startInd, barW, Math.round(offsetX*round)/round);
-    // var X = getXCoords(gridWidth, eI - sI, barW, Math.round(offsetX*round)/round);
 
     for (var i = 0; i < columns.length; i++) {
-      // var Y = getYCoords(bottomY, columns[i].values.slice(startInd, endInd), gridMaxY.value);
       var Y = getYCoords(bottomY, columns[i].values.slice(sI, eI+1), gridMaxY.value);
-      // console.log(X, Y);
       drawLine(X, Y, colors[i], columns[i].alpha.value);
     }
 
     if (selectedInd >= startInd && selectedInd <= endInd) {
+      // var ind = selectedInd - sI;
       var ind = selectedInd - startInd;
       var filteredColumns = columns.filter(c => c.isOn);
 
@@ -359,14 +345,16 @@ export function lineChart(w, h, data) {
       ctx.beginPath();
       ctx.fillStyle = '#FFFFFF'; // FIXME Color
       filteredColumns.forEach(c => {
-        ctx.arc(Math.floor(X[ind]), Math.floor(getScreenY(bottomY, c.values[selectedInd], gridMaxY.value)), 5.5, 0, 2 * Math.PI);
+        // ctx.arc(Math.floor(X[ind]), Math.floor(getScreenY(bottomY, c.values[selectedInd], gridMaxY.value)), 5.5, 0, 2 * Math.PI);
+        // ctx.arc(Math.floor(X[ind]), Math.floor(getScreenY(bottomY, c.values[selectedInd], gridMaxY.value)), 5.5, 0, 2 * Math.PI);
       });
       ctx.fill();
 
       filteredColumns.forEach(c => {
         ctx.beginPath();
         ctx.strokeStyle = data.colors[c.id]; // FIXME Color
-        ctx.arc(Math.floor(X[ind]), Math.floor(getScreenY(bottomY, c.values[selectedInd], gridMaxY.value)), 5.5, 0, 2 * Math.PI);
+        // ctx.arc(Math.floor(X[ind]), Math.floor(getScreenY(bottomY, c.values[selectedInd], gridMaxY.value)), 5.5, 0, 2 * Math.PI);
+        ctx.arc(Math.floor(getScreenXByInd(selectedInd, barW, offsetX)), Math.floor(getScreenY(bottomY, c.values[selectedInd], gridMaxY.value)), 5.5, 0, 2 * Math.PI);
         ctx.stroke();
         ctx.closePath();
       });
@@ -405,12 +393,15 @@ export function lineChart(w, h, data) {
   function drawMini() {
     ctx.clearRect(miniChartX, miniChartY, miniChartWidth, miniChartHeight);
 
-    ctx.beginPath();
-    var X = getXCoords(miniChartWidth, oxLabels.length, miniChartStep, miniChartX);
-    // var max = getMatrixMax(columns.map(c => c.values));
+    var X = [];
+    for (var i = 0; i < oxLabels.length; i++) {
+      X.push(getScreenXByInd(i, miniChartStep, miniChartX));
+    }
+    var max = getMatrixMax(columns.filter(c => c.isOn).map(c => c.values));
 
+    ctx.beginPath();
     for (var i = 0; i < columns.length; i++) {
-      var Y = getYCoords(miniChartHeight, columns[i].values, gridMaxY.value).map(y => miniChartY + y);
+      var Y = getYCoords(miniChartHeight, columns[i].values, max).map(y => miniChartY + y);
       drawLine(X, Y, colors[i], columns[i].alpha.value);
     }
   }
@@ -421,15 +412,15 @@ export function lineChart(w, h, data) {
 
 const round = 1000;
 
-function getXCoords(width, xLength, step, offset=0) {
-  var coords = [];
-  for (var i = 0; i < xLength; i++) {
-    coords.push(Math.round((i*step + offset)*round)/round);
-  }
-  return coords;
-}
+// function getXCoords(width, xLength, step, offset=0) {
+//   var coords = [];
+//   for (var i = 0; i < xLength; i++) {
+//     coords.push(Math.round((i*step + offset)*round)/round);
+//   }
+//   return coords;
+// }
 
-function getScreenXByInd(i, step, offset) {
+function getScreenXByInd(i, step, offset=0) {
   return i*step + offset;
 }
 
