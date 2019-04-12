@@ -16,7 +16,7 @@ export function chartBase(w, h, previewW, previewH) {
 
   me.preview = preview(previewW, previewH);
   me.preview.onupdate = function(state) {
-    // me.updateRange(state.left, state.right);
+    me.updateRange(state.left, state.right);
   } // TODO Pass chart type here, // FIXME remove "0.2"
   me.preview.style.position = 'absolute';
   me.preview.style.bottom = 0;

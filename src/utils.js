@@ -70,3 +70,12 @@ function getStepForGridValues(max, k=1) { // FIXME Отвязать от 6
     return s(a, b, ds);
   }
 }
+
+export function getDataColumnByName(name, data) {
+  for (var i = 0; i < data.length; i++) {
+    if (data[i][0] === name) {
+      return data[i].slice(1);
+    }
+  }
+  return [];
+}

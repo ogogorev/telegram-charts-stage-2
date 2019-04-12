@@ -21,6 +21,10 @@ export function AnimatedValue(value, duration=0.5) {
 AnimatedValue.prototype.set = function(newValue, now=performance.now(), animated=false) {
   if (!animated) { this.value = newValue;return; }
 
+  if (isNaN(this.value)) {
+    return;
+  }
+
   this.started = now;
   this.from = this.value;
   this.to = newValue;
@@ -28,11 +32,11 @@ AnimatedValue.prototype.set = function(newValue, now=performance.now(), animated
 };
 AnimatedValue.prototype.nextTick = function(now, name) {
   if (this.started) {
-    // var p = (performance.now() - this.started)/this.duration;
-    if (name) console.log('name', name);
     var p = (now - this.started)/this.duration;
     if (p > 1) p = 1;
-    this.value = this.from + (this.to - this.from) * this.ease(p);
+    if (p < 0) p = 0;
+    this.value = Math.round((this.from + (this.to - this.from) * this.ease(p))*100)/100;
+
     if (p === 1) this.started = false;
     return true;
   }
