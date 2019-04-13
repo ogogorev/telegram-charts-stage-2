@@ -12,19 +12,19 @@ import {
 } from '../utils';
 import { OXLABELS_HEIGHT, CHART_GRID_PADDING, GRID_LINES_COUNT, PREVIEW_HEIGHT } from '../consts';
 
-const Y_ANIMATION_TIME = 0.3;
-const OX_LABELS_ANIMATION_DURATION = 0.25;
-const OY_LABELS_MARGIN_TOP = -10;
+const Y_ANIMATION_TIME = 0.3; // to base
+const OX_LABELS_ANIMATION_DURATION = 0.25; // to base
+const OY_LABELS_MARGIN_TOP = -10; // to base
 
-const MINI_CHART_HEIGHT = 50;
-const MINI_CHART_MARGIN = 30;
+const MINI_CHART_HEIGHT = 50; // to base
+const MINI_CHART_MARGIN = 30; // to base
 
 export function lineChart(w, h, data) {
   console.log(data);
   var me = chartBase(w, h);
   var ctx = me.canvas.getContext('2d');
 
-  var gridWidth = w - CHART_GRID_PADDING*2;
+  var gridWidth = w - CHART_GRID_PADDING*2; // to base
 
   // data
 
@@ -46,53 +46,48 @@ export function lineChart(w, h, data) {
     colors.push(data.colors[columnNames[i]]);
   }
 
-  var info;
-
-  // columns.map(c => {
-  //
-  //   console.log('column', c.name, getMax(c.values));
-  // })
+  var info; // to base
 
   // draw props
 
-  var bottomY = h - OXLABELS_HEIGHT - MINI_CHART_HEIGHT - MINI_CHART_MARGIN;
-  var oxLabelsBottomY = h - MINI_CHART_HEIGHT - MINI_CHART_MARGIN;
+  var bottomY = h - OXLABELS_HEIGHT - MINI_CHART_HEIGHT - MINI_CHART_MARGIN; // to base, rename to mainChartY
+  var oxLabelsBottomY = h - MINI_CHART_HEIGHT - MINI_CHART_MARGIN; // to base, rename to oxLabelsY
   // var miniChartTopY = h - MINI_CHART_HEIGHT + 1;
 
-  var barWidth = 0;
-  var offsetX = 0;
+  var barWidth = 0; // to base, rename to step
+  var offsetX = 0; // to base
 
-  var startInd = 0;
-  var endInd = 0;
-  var selectedInd = -1;
-  var selectedScreenX = 0;
+  var startInd = 0; // to base
+  var endInd = 0; // to base
+  var selectedInd = -1; // to base
+  var selectedScreenX = 0; // to base
 
   // ox props
 
-  const oxLabelWidth = 50;
-  const countOnScreen = w/oxLabelWidth;
-  var currOxLabelsStep = 1;
-  var staticOxLabels = { step: 1, lastInd: 0, alpha: new AnimatedValue(1, OX_LABELS_ANIMATION_DURATION) };
-  var dynamicOxLabels = { step: 1, lastInd: 0, alpha: new AnimatedValue(1, OX_LABELS_ANIMATION_DURATION) };
+  const oxLabelWidth = 50; // to base
+  const countOnScreen = w/oxLabelWidth; // to base
+  var currOxLabelsStep = 1; // to base
+  var staticOxLabels = { step: 1, lastInd: 0, alpha: new AnimatedValue(1, OX_LABELS_ANIMATION_DURATION) }; // to base
+  var dynamicOxLabels = { step: 1, lastInd: 0, alpha: new AnimatedValue(1, OX_LABELS_ANIMATION_DURATION) }; // to base
 
   // oy props
 
-  var currMaxY = 0;
-  var gridMaxY = new AnimatedValue(0, Y_ANIMATION_TIME);
+  // var currMaxY = 0; // to base
+  var gridMaxY = new AnimatedValue(0, Y_ANIMATION_TIME); // to base
 
-  var gridLinesHeight = Math.round(bottomY / GRID_LINES_COUNT);
+  var gridLinesHeight = Math.round(bottomY / GRID_LINES_COUNT); // to base
   var oldOyLabels = {
     alpha: new AnimatedValue(0, Y_ANIMATION_TIME),
     offsetY: new AnimatedValue(0, Y_ANIMATION_TIME),
     labels: [0, 1, 2, 3, 4, 5, 6]
-  };
+  }; // to base
   var newOyLabels = {
     alpha: new AnimatedValue(1, Y_ANIMATION_TIME),
     offsetY: new AnimatedValue(0, Y_ANIMATION_TIME),
     labels: [0, 1, 2, 3, 4, 5]
-  };
+  }; // to base
 
-  function init() {
+  function init() { // to base
     initGridMaxY();
     drawMini();
     initInfo();
@@ -163,6 +158,7 @@ export function lineChart(w, h, data) {
   }
 
   const L = dataLength - 1;
+  var gridStepY = 0;
   me.update = function() {
     // startInd = Math.floor(me.previewLeftX * L);
     startInd = Math.max(Math.ceil(me.previewLeftX * L) - 1, 0);
@@ -171,20 +167,22 @@ export function lineChart(w, h, data) {
     offsetX = calculateOffsetX(gridWidth, CHART_GRID_PADDING, me.previewLeftX, me.previewRightX); // новый
 
     var maxY = getMatrixMax(columns.filter(c => c.isOn).map(c => c.values.slice(startInd, endInd+1)));
+    var newGridStepY = getStepForGridValues(maxY);
 
     updateOxLabels();
 
-    if (currMaxY !== maxY) {
+    if (gridStepY !== newGridStepY) {
       // updateY(maxY);
-      var newGridValues = getGridValuesByMax(maxY);
+      // var newGridValues = getGridValuesByMax(maxY);
       var now = performance.now();
 
-      gridMaxY.set(newGridValues.splice(-1, 1)[0], now, true);
+      // gridMaxY.set(newGridValues.splice(-1, 1)[0], now, true);
+      gridMaxY.set(newGridStepY*6, now, true);
 
 
       var k = 1;
-      if (currMaxY > maxY) k = -1; // Если надо вверх
-      currMaxY = maxY;
+      if (gridStepY > newGridStepY) k = -1; // Если надо вверх
+      gridStepY = newGridStepY;
 
       oldOyLabels.labels = newOyLabels.labels;
 
@@ -198,7 +196,8 @@ export function lineChart(w, h, data) {
       newOyLabels.alpha.set(1, now, true);
       newOyLabels.offsetY.set(0, now, true);
 
-      newOyLabels.labels = newGridValues;
+      // newOyLabels.labels = newGridValues;
+      newOyLabels.labels = [0, 1, 2, 3, 4, 5].map(n => n*newGridStepY);
     }
 
     me.draw();
@@ -271,6 +270,13 @@ export function lineChart(w, h, data) {
     drawOxLabels(dynamicOxLabels, oxLabels.length - 1 - dynamicOxLabels.step/2); // Говно какое-то
     drawOyLabels(oldOyLabels);
     drawOyLabels(newOyLabels);
+
+    ctx.beginPath();
+    ctx.globalAlpha = 1;
+    ctx.fillText(0, CHART_GRID_PADDING, bottomY + OY_LABELS_MARGIN_TOP);
+    ctx.moveTo(CHART_GRID_PADDING, bottomY + 0.5);
+    ctx.lineTo(w - CHART_GRID_PADDING, bottomY + 0.5);
+    ctx.stroke();
   }
 
   const labelWidthHalf = 15;
@@ -308,11 +314,6 @@ export function lineChart(w, h, data) {
       ctx.moveTo(CHART_GRID_PADDING, y);
       ctx.lineTo(w - CHART_GRID_PADDING, y);
     }
-
-    ctx.fillText(0, CHART_GRID_PADDING, bottomY + OY_LABELS_MARGIN_TOP);
-    ctx.moveTo(CHART_GRID_PADDING, bottomY + 0.5);
-    ctx.lineTo(w - CHART_GRID_PADDING, bottomY + 0.5);
-
     ctx.stroke();
   }
 
