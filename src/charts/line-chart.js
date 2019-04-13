@@ -10,6 +10,8 @@ import {
 } from '../utils';
 import { OXLABELS_HEIGHT, CHART_GRID_PADDING, GRID_LINES_COUNT, PREVIEW_HEIGHT } from '../consts';
 
+const Y_ANIMATION_TIME = .3; // FIXME
+
 export function lineChart(w, h, data) {
   var chart = new LineChart(w, h, data);
   return chart.container;
@@ -28,6 +30,17 @@ LineChart.prototype.initData = function() {
   ChartBase.prototype.initData.call(this, 150);
 }
 
+LineChart.prototype.initOyProps = function() {
+  ChartBase.prototype.initOyProps.apply(this);
+
+  this.gridMiniMaxY = new AnimatedValue(0, Y_ANIMATION_TIME);
+  this.gridMiniMaxY.set(this.calculateGridMiniMaxY(), performance.now(), true);
+}
+
+LineChart.prototype.calculateGridMiniMaxY = function () {
+  return getMatrixMax(this.columns.filter(c => c.isOn).map(c => c.values));
+}
+
 LineChart.prototype.buttonClicked = function(name, isOn) {
   var now = performance.now();
   for (var i = 0; i < this.columns.length; i++) {
@@ -35,9 +48,18 @@ LineChart.prototype.buttonClicked = function(name, isOn) {
       if (isOn) this.columns[i].alpha.set(1, now, true)
       else this.columns[i].alpha.set(0, now, true)
       this.columns[i].isOn = isOn;
+
+      this.gridMiniMaxY.set(Math.max(this.calculateGridMiniMaxY(), 0), now, true);
+
       this.update();
     }
   }
+}
+
+LineChart.prototype.checkRedrawChartsContent = function(now) {
+  ChartBase.prototype.checkRedrawChartsContent.call(this, now);
+
+  if (this.gridMiniMaxY.nextTick(now)) this.needDrawMini = true;
 }
 
 LineChart.prototype.drawChartContent = function() {
@@ -113,18 +135,26 @@ LineChart.prototype.drawSelected = function() {
   }
 }
 
+LineChart.prototype.getGridMaxForColumnMini = function(column) {
+  return this.gridMiniMaxY.value;
+};
+
 LineChart.prototype.drawMini = function() {
-  this.ctx.clearRect(this.miniChartX, this.miniChartY, this.miniChartWidth, this.miniChartHeight);
-  var max = getMatrixMax(this.columns.filter(c => c.isOn).map(c => c.values));
+  this.clearDrawMini();
 
   var X = [];
   for (var i = 0; i < this.oxLabels.length; i++) {
     X.push(getScreenXByInd(i, this.miniChartStep, this.miniChartX));
   }
+  X[0] = Math.ceil(X[0]);
+  X[X.length-1] = Math.floor(X[X.length-1]);
 
   this.ctx.beginPath();
   for (var i = 0; i < this.columns.length; i++) {
-    var Y = getYCoords(this.miniChartHeight, this.columns[i].values, max).map(y => this.miniChartY + y);
+    var Y = getYCoords(this.miniChartHeight, this.columns[i].values, this.getGridMaxForColumnMini(this.columns[i]))
+    // .map(y => this.miniChartY + y);
+    .map(y => Math.max(this.miniChartY + y, this.miniChartY));
+
     this.drawLine(X, Y, this.columns[i].color, this.columns[i].alpha.value);
   }
 }

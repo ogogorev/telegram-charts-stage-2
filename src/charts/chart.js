@@ -282,7 +282,8 @@ ChartBase.prototype.buttonClicked = function() {}
 
 ChartBase.prototype.draw = function() {
   requestAnimationFrame(function() {
-    this.ctx.clearRect(0, 0, this.w, this.oxLabelsBottomY);
+    // this.ctx.clearRect(0, 0, this.w, this.oxLabelsBottomY);
+    this.ctx.clearRect(0, 0, this.w, this.miniChartY);
 
     this.ctx.beginPath();
     this.ctx.rect(0, 0, this.w, this.bottomY);
@@ -325,6 +326,10 @@ ChartBase.prototype.checkRedrawChartsContent = function(now) {
 }
 
 ChartBase.prototype.drawChartContent = function() {}
+
+ChartBase.prototype.clearDrawMini = function() {
+  this.ctx.clearRect(this.miniChartX-2, this.miniChartY, this.miniChartWidth+4, this.miniChartY);
+}
 
 ChartBase.prototype.calculateValuesMaxY = function() {
   return getMatrixMax(this.columns.filter(c => c.isOn).map(c => c.values.slice(this.startInd, this.endInd+1)));

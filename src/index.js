@@ -20,11 +20,11 @@ function main() {
 
   // var chart = createChart(400, 450, chart_data);
 
-  var chart = lineChart(400, 450, chart_data1);
-  document.body.append(chart);
-
-  // var chart = twoAxesLineChart(400, 450, chart_data2);
+  // var chart = lineChart(400, 450, chart_data1);
   // document.body.append(chart);
+
+  var chart = twoAxesLineChart(400, 450, chart_data2);
+  document.body.append(chart);
 
   // var chart = barChart(400, 450, chart_data4);
   // document.body.append(chart);
