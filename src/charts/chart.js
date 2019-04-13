@@ -14,7 +14,7 @@ import {
 import { OXLABELS_HEIGHT, CHART_GRID_PADDING, GRID_LINES_COUNT, PREVIEW_HEIGHT } from '../consts';
 
 
-const Y_ANIMATION_TIME = 0.3;
+const Y_ANIMATION_TIME = .3;
 const OX_LABELS_ANIMATION_DURATION = 0.25;
 const OY_LABELS_MARGIN_TOP = -10;
 
@@ -46,7 +46,7 @@ export function ChartBase(w, h, data) {
     this.updateRange(state.left, state.right);
   }.bind(this);
 
-  this.previewLeftX = 0;
+  this.previewLeftX = 0.8;
   this.previewRightX = 1;
 
   this.data = data;
@@ -63,7 +63,6 @@ ChartBase.prototype.initData = function(dataLength=Number.POSITIVE_INFINITY) {
 
   this.columnNames = Object.keys(this.data.names); // FIXME Remove
   this.columns = [];
-  // this.colors = [];
   for (var i = 0; i < this.columnNames.length; i++) {
     this.columns.push({
       id: this.columnNames[i],
@@ -73,7 +72,6 @@ ChartBase.prototype.initData = function(dataLength=Number.POSITIVE_INFINITY) {
       alpha: new AnimatedValue(1, Y_ANIMATION_TIME),
       values: getDataColumnByName(this.columnNames[i], this.data.columns).slice(0, dataLength)
     });
-    // this.colors.push();
   }
 }
 
@@ -83,7 +81,7 @@ ChartBase.prototype.init = function() {
   this.initOyProps();
   this.initMiniChartProps();
 
-  this.drawMini();
+  // this.drawMini();
   this.initInfo();
   this.initButtons();
   this.update();
@@ -94,9 +92,8 @@ ChartBase.prototype.initDrawProps = function() {
   this.oxLabelsBottomY = this.h - MINI_CHART_HEIGHT - MINI_CHART_MARGIN; // FIXME rename to oxLabelsY
 
   this.needRedraw = false;
-  this.needDrawMini = false;
+  this.needDrawMini = true;
 
-  this.gridStepY = 0;
   this.gridWidth = this.w - CHART_GRID_PADDING*2;
 
   this.barWidth = 0; // FIXME rename to step
@@ -120,17 +117,18 @@ ChartBase.prototype.initOxProps = function() {
 }
 
 ChartBase.prototype.initOyProps = function() {
+  this.gridStepY = 0;
   this.gridMaxY = new AnimatedValue(0, Y_ANIMATION_TIME);
 
   this.gridLinesHeight = Math.round(this.bottomY / GRID_LINES_COUNT);
   this.oldOyLabels = {
     alpha: new AnimatedValue(0, Y_ANIMATION_TIME),
-    offsetY: new AnimatedValue(0, Y_ANIMATION_TIME),
+    offsetY: this.gridLinesHeight/2,
     labels: [0, 1, 2, 3, 4, 5, 6]
   };
   this.newOyLabels = {
     alpha: new AnimatedValue(1, Y_ANIMATION_TIME),
-    offsetY: new AnimatedValue(0, Y_ANIMATION_TIME),
+    offsetY: -this.gridLinesHeight/2,
     labels: [0, 1, 2, 3, 4, 5]
   };
 }
@@ -181,14 +179,17 @@ ChartBase.prototype.drawBg = function() {
   this.drawOxLabels(this.dynamicOxLabels, this.oxLabels.length - 1 - this.dynamicOxLabels.step/2); // Говно какое-то
   this.drawOyLabels(this.oldOyLabels);
   this.drawOyLabels(this.newOyLabels);
+  this.drawZeroLine();
+}
 
+ChartBase.prototype.drawZeroLine = function () {
   this.ctx.beginPath();
   this.ctx.globalAlpha = 1;
   this.ctx.fillText(0, CHART_GRID_PADDING, this.bottomY + OY_LABELS_MARGIN_TOP);
   this.ctx.moveTo(CHART_GRID_PADDING, this.bottomY + 0.5);
   this.ctx.lineTo(this.w - CHART_GRID_PADDING, this.bottomY + 0.5);
   this.ctx.stroke();
-}
+};
 
 ChartBase.prototype.calculateOxLabelsOffsetX = function () {
   this.oxLabelsOffsetX = this.offsetX - this.labelWidthHalf;
@@ -207,31 +208,8 @@ ChartBase.prototype.drawOxLabels = function(oxLabelsProps, lastInd) {
   }
 }
 
-ChartBase.prototype.drawOyLabels = function(oyLabels) {
-  if (oyLabels.alpha.value <= 0) return;
-  this.ctx.globalAlpha = oyLabels.alpha.value;
-  this.ctx.strokeStyle = 'black'; // FIXME color to const
-  this.ctx.lineWidth = 1;
-  this.ctx.beginPath();
-
-  var offset = Math.round(oyLabels.labels.length * this.gridLinesHeight + oyLabels.offsetY.value);
-
-  for (var i = 1; i < oyLabels.labels.length; i++) {
-    var y = offset - i * this.gridLinesHeight;
-    this.ctx.fillText(
-      oyLabels.labels[i],
-      CHART_GRID_PADDING,
-      offset - i * this.gridLinesHeight + OY_LABELS_MARGIN_TOP
-    );
-    y -= 0.5;
-    this.ctx.moveTo(CHART_GRID_PADDING, y);
-    this.ctx.lineTo(this.w - CHART_GRID_PADDING, y);
-  }
-  this.ctx.stroke();
-}
-
 ChartBase.prototype.updateOxLabels = function() {
-  var step = Math.max(1, (this.endInd - this.startInd + 1) / this.countOnScreen);
+  var step = Math.max(1, (this.endInd - this.startInd + 1) / this.countOnScreen); // FIXME если range не изменился, то и сюда не надо
   var p = 1;
   while (step > p) p *= 2;
   step = p;
@@ -254,6 +232,32 @@ ChartBase.prototype.updateOxLabels = function() {
     this.dynamicOxLabels.step = this.currOxLabelsStep;
     this.currOxLabelsStep /= 2;
   }
+}
+
+ChartBase.prototype.drawOyLabels = function(oyLabels) {
+  if (oyLabels.alpha.value <= 0) return;
+  this.ctx.globalAlpha = oyLabels.alpha.value;
+  this.ctx.strokeStyle = 'black'; // FIXME color to const
+  this.ctx.lineWidth = 1;
+  this.ctx.beginPath();
+
+  var offset = Math.round(
+    oyLabels.labels.length * this.gridLinesHeight + oyLabels.offsetY*(1-oyLabels.alpha.value)
+  );
+
+  for (var i = 1; i < oyLabels.labels.length; i++) {
+    var y = offset - i * this.gridLinesHeight;
+
+    this.ctx.fillText(
+      oyLabels.labels[i],
+      CHART_GRID_PADDING,
+      y + OY_LABELS_MARGIN_TOP
+    );
+    y -= 0.5;
+    this.ctx.moveTo(CHART_GRID_PADDING, y);
+    this.ctx.lineTo(this.w - CHART_GRID_PADDING, y);
+  }
+  this.ctx.stroke();
 }
 
 ChartBase.prototype.xToInd = function(x) {
@@ -308,9 +312,7 @@ ChartBase.prototype.draw = function() {
 ChartBase.prototype.checkRedrawBg = function(now) {
   if (this.gridMaxY.nextTick(now)) this.needRedraw = true;
   if (this.oldOyLabels.alpha.nextTick(now)) this.needRedraw = true;
-  if (this.oldOyLabels.offsetY.nextTick(now)) this.needRedraw = true;
   if (this.newOyLabels.alpha.nextTick(now)) this.needRedraw = true;
-  if (this.newOyLabels.offsetY.nextTick(now)) this.needRedraw = true;
   if (this.dynamicOxLabels.alpha.nextTick(now)) this.needRedraw = true;
 }
 
@@ -328,6 +330,35 @@ ChartBase.prototype.calculateValuesMaxY = function() {
   return getMatrixMax(this.columns.filter(c => c.isOn).map(c => c.values.slice(this.startInd, this.endInd+1)));
 }
 
+ChartBase.prototype.updateY = function () {
+  var maxY = this.calculateValuesMaxY();
+  var newGridStepY = getStepForGridValues(maxY);
+
+  if (this.gridStepY !== newGridStepY) {
+    var now = performance.now();
+
+    this.gridMaxY.set(newGridStepY*6, now, true);
+
+    if (
+      (this.oldOyLabels.offsetY > 0 && this.gridStepY > newGridStepY) ||
+      (this.oldOyLabels.offsetY < 0 && this.gridStepY < newGridStepY)
+    ) {
+      this.oldOyLabels.offsetY *= -1;
+      this.newOyLabels.offsetY *= -1;
+    }
+
+    this.gridStepY = newGridStepY;
+
+    this.oldOyLabels.alpha.set(1);
+    this.oldOyLabels.alpha.set(0, now, true);
+    this.newOyLabels.alpha.set(0);
+    this.newOyLabels.alpha.set(1, now, true);
+
+    this.oldOyLabels.labels = this.newOyLabels.labels;
+    this.newOyLabels.labels = [0, 1, 2, 3, 4, 5].map(n => n*newGridStepY);
+  }
+};
+
 ChartBase.prototype.update = function() {
   // startInd = Math.floor(me.previewLeftX * L);
   this.startInd = Math.max(Math.ceil(this.previewLeftX * this.L) - 1, 0);
@@ -335,37 +366,10 @@ ChartBase.prototype.update = function() {
   this.barWidth = this.gridWidth/(this.L*(this.previewRightX-this.previewLeftX));
   this.offsetX = calculateOffsetX(this.gridWidth, CHART_GRID_PADDING, this.previewLeftX, this.previewRightX);
 
-
-  var maxY = this.calculateValuesMaxY();
-  var newGridStepY = getStepForGridValues(maxY);
-
   this.calculateOxLabelsOffsetX();
   this.updateOxLabels();
 
-  if (this.gridStepY !== newGridStepY) {
-    var now = performance.now();
-
-    this.gridMaxY.set(newGridStepY*6, now, true);
-
-
-    var k = 1;
-    if (this.gridStepY > newGridStepY) k = -1; // Если надо вверх
-    this.gridStepY = newGridStepY;
-
-    this.oldOyLabels.labels = this.newOyLabels.labels;
-
-    this.oldOyLabels.alpha.set(1);
-    this.oldOyLabels.offsetY.set(-1);
-    this.oldOyLabels.alpha.set(0, now, true);
-    this.oldOyLabels.offsetY.set(k*this.gridLinesHeight/2, now, true);
-
-    this.newOyLabels.alpha.set(-1);
-    this.newOyLabels.offsetY.set(-k*this.gridLinesHeight/2);
-    this.newOyLabels.alpha.set(1, now, true);
-    this.newOyLabels.offsetY.set(0, now, true);
-
-    this.newOyLabels.labels = [0, 1, 2, 3, 4, 5].map(n => n*newGridStepY);
-  }
+  this.updateY();
 
   this.draw();
 }

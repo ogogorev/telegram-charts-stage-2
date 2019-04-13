@@ -15,7 +15,7 @@ export function lineChart(w, h, data) {
   return chart.container;
 }
 
-function LineChart(w, h, data) {
+export function LineChart(w, h, data) {
   console.log(data);
   ChartBase.apply(this, arguments);
   this.init();
@@ -51,10 +51,14 @@ LineChart.prototype.drawChartContent = function() {
   }
 
   for (var i = 0; i < this.columns.length; i++) {
-    var Y = getYCoords(this.bottomY, this.columns[i].values.slice(sI, eI+1), this.gridMaxY.value);
+    var Y = getYCoords(this.bottomY, this.columns[i].values.slice(sI, eI+1), this.getGridMaxForColumn(this.columns[i]));
     this.drawLine(X, Y, this.columns[i].color, this.columns[i].alpha.value);
   }
 }
+
+LineChart.prototype.getGridMaxForColumn = function(column) {
+  return this.gridMaxY.value;
+};
 
 LineChart.prototype.drawLine = function(X, Y, color, alpha=1) {
   if (alpha > 0) {
@@ -111,12 +115,12 @@ LineChart.prototype.drawSelected = function() {
 
 LineChart.prototype.drawMini = function() {
   this.ctx.clearRect(this.miniChartX, this.miniChartY, this.miniChartWidth, this.miniChartHeight);
+  var max = getMatrixMax(this.columns.filter(c => c.isOn).map(c => c.values));
 
   var X = [];
   for (var i = 0; i < this.oxLabels.length; i++) {
     X.push(getScreenXByInd(i, this.miniChartStep, this.miniChartX));
   }
-  var max = getMatrixMax(this.columns.filter(c => c.isOn).map(c => c.values));
 
   this.ctx.beginPath();
   for (var i = 0; i < this.columns.length; i++) {
