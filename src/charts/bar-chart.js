@@ -1,4 +1,4 @@
-import { chartBase } from './chart';
+import { ChartBase, getScreenXByInd, getYCoords } from './chart';
 import { AnimatedValue, AnimatedArray, main } from '../animations';
 import { createInfo } from './point-info';
 import {
@@ -16,53 +16,117 @@ const MINI_CHART_HEIGHT = 50;
 const MINI_CHART_MARGIN = 30;
 
 
-// var arr = Array(1000).fill(0).map(e => 1 + Math.floor(Math.random() * 99));
-// var bigArr = Array(1000).fill(0).map(e => 1000000 + Math.floor(Math.random() * 50000000));
-// sum(arr);
-// sum(bigArr);
-// function sum(arr) {
-//   console.time('start ' + arr[0]);
-//   arr.reduce((a, c) => a + c);
-//   console.timeEnd('start ' + arr[0]);
-// }
-
-
-
-
-
-
-
 export function barChart(w, h, data) {
+  var chart = new BarChart(w, h, data);
+  return chart.container;
+}
+
+function BarChart(w, h, data) {
+  console.log(data);
+  ChartBase.apply(this, arguments);
+  this.L++;
+  this.init();
+
+}
+
+BarChart.prototype = Object.create(ChartBase.prototype);
+BarChart.prototype.constructor = BarChart;
+
+BarChart.prototype.initData = function() {
+  ChartBase.prototype.initData.call(this, 50);
+}
+
+BarChart.prototype.calculateOxLabelsOffsetX = function () {
+  this.oxLabelsOffsetX = this.offsetX + this.barWidth/2 - this.labelWidthHalf;
+};
+
+ChartBase.prototype.calculateValuesMaxY = function() {
+  return getMax(this.columns[0].values.slice(Math.max(0, this.startInd-1), this.endInd+1));
+}
+
+BarChart.prototype.drawMini = function() {
+  this.ctx.clearRect(this.miniChartX, this.miniChartY, this.miniChartWidth, this.miniChartHeight);
+
+  this.ctx.beginPath();
+  this.ctx.globalAlpha = 0.4; // FIXME Alpha to const
+  this.ctx.fillStyle = this.columns[0].color;
+
+  var X = [];
+  for (var i = 0; i < this.oxLabels.length; i++) {
+    X.push(getScreenXByInd(i, this.miniChartStep, this.miniChartX));
+  }
+  var max = getMax(this.columns[0].values);
+  var Y = getYCoords(this.miniChartHeight, this.columns[0].values, max).map(y => this.miniChartY + y);
+
+  var barWidth = X[1] - X[0];
+  for (var i = 0; i < X.length; i++) {
+    this.ctx.rect(X[i], Y[i], barWidth, this.h - Y[i]);
+  }
+  this.ctx.fill();
+}
+
+BarChart.prototype.initButtons = function () {};
+
+BarChart.prototype.drawChartContent = function() {
+  this.ctx.beginPath();
+  this.ctx.globalAlpha = 0.4; // FIXME Alpha to const
+  var barW = Math.round(this.barWidth*this.round)/this.round;
+  var sI = Math.max(this.startInd-1, 0);
+  var eI = Math.min(this.endInd+1, this.L);
+
+  var X = [];
+  for (var i = sI; i < eI+1; i++) {
+    X.push(getScreenXByInd(i, barW, this.offsetX));
+  }
+
+  var Y = getYCoords(this.bottomY, this.columns[0].values.slice(sI, eI+1), this.gridMaxY.value);
+  for (var i = 0; i < X.length; i++) {
+    if (i !== this.selectedInd - sI) {
+      this.ctx.rect(X[i], Y[i], barW, this.bottomY - Y[i]);
+    }
+  }
+  this.ctx.fillStyle = this.columns[0].color;
+  this.ctx.fill();
+}
+
+BarChart.prototype.drawSelected = function () {
+
+  // if (selectedInd >= startInd && selectedInd <= endInd) {
+  //   var ind = selectedInd - startInd;
+  //   ctx.beginPath();
+  //   ctx.fillStyle = 'black';
+  //   ctx.rect(X[ind], Y[ind], barWidth, bottomY - Y[ind]);
+  //   ctx.fill();
+  //
+  //   info.style.left = X[ind] + (barWidth - info.offsetWidth)/2 + 'px';
+  //   info.style.top = Y[ind] - info.offsetHeight  - 15 + 'px'; // FIXME Info margin
+  //   info.appear();
+  // }
+  // else {
+  //   info.disappear()
+  // }
+
+};
+
+
+
+
+
+
+
+
+
+
+
+export function barChart1(w, h, data) {
   console.log(data);
   var me = chartBase(w, h, w - CHART_GRID_PADDING*2, PREVIEW_HEIGHT);
   var ctx = me.canvas.getContext('2d');
-
-  // data
-
-  var dataLength = 120; // FIXME Remove
-  // var dataLength = data.columns[0].slice(1).length;
 
   var oxLabels = data.columns[0].slice(1, 1+dataLength).map(date => createLabelFromDate(date));
   var values = data.columns[1].slice(1, 1+dataLength);
   // var values = Array(dataLength).fill(0).map((e, i) => 1 + i*2);
   var color = data.colors[Object.keys(data.names)[0]];
-
-  // draw props
-
-  var bottomY = h - OXLABELS_HEIGHT - MINI_CHART_HEIGHT - MINI_CHART_MARGIN;
-  var oxLabelsBottomY = h - MINI_CHART_HEIGHT - MINI_CHART_MARGIN;
-  var miniChartTopY = h - MINI_CHART_HEIGHT;
-
-  var xCoords = getXCoords(w, oxLabels);
-  // var yCoords = getYCoords(bottomY, values, getMax(values));
-  var yCoords = values;
-
-  var barWidth = 0;
-  var offsetX = 0;
-
-  var startInd = 0;
-  var endInd = 0;
-  var selectedInd = -1;
 
   // ox props
 
@@ -268,50 +332,36 @@ export function barChart(w, h, data) {
 
   function drawBars() {
 
-    ctx.beginPath();
-    ctx.globalAlpha = 0.4; // FIXME Alpha to const
-    var barW = Math.round(barWidth*round)/round;
-    // var X = getXCoords(w, oxLabels.slice(startInd, endInd), barW, Math.round(offsetX));
-    var X = getXCoords(w, oxLabels.slice(startInd, endInd), barW, Math.round(offsetX*round)/round);
-    // console.log('X', X);
-    var Y = getYCoords(bottomY, yCoords.slice(startInd, endInd), gridMaxY.value);
-    for (var i = 0; i < X.length; i++) {
-      if (i !== selectedInd - startInd) {
-        ctx.rect(X[i], Y[i], barW, bottomY - Y[i]);
-      }
-    }
-    ctx.fillStyle = color;
-    ctx.fill();
+    // ctx.beginPath();
+    // ctx.globalAlpha = 0.4; // FIXME Alpha to const
+    // var barW = Math.round(barWidth*round)/round;
+    // // var X = getXCoords(w, oxLabels.slice(startInd, endInd), barW, Math.round(offsetX));
+    // var X = getXCoords(w, oxLabels.slice(startInd, endInd), barW, Math.round(offsetX*round)/round);
+    // // console.log('X', X);
+    // var Y = getYCoords(bottomY, yCoords.slice(startInd, endInd), gridMaxY.value);
+    // for (var i = 0; i < X.length; i++) {
+    //   if (i !== selectedInd - startInd) {
+    //     ctx.rect(X[i], Y[i], barW, bottomY - Y[i]);
+    //   }
+    // }
+    // ctx.fillStyle = color;
+    // ctx.fill();
+    //
+    // if (selectedInd >= startInd && selectedInd <= endInd) {
+    //   var ind = selectedInd - startInd;
+    //   ctx.beginPath();
+    //   ctx.fillStyle = 'black';
+    //   ctx.rect(X[ind], Y[ind], barWidth, bottomY - Y[ind]);
+    //   ctx.fill();
+    //
+    //   info.style.left = X[ind] + (barWidth - info.offsetWidth)/2 + 'px';
+    //   info.style.top = Y[ind] - info.offsetHeight  - 15 + 'px'; // FIXME Info margin
+    //   info.appear();
+    // }
+    // else {
+    //   info.disappear()
+    // }
 
-    if (selectedInd >= startInd && selectedInd <= endInd) {
-      var ind = selectedInd - startInd;
-      ctx.beginPath();
-      ctx.fillStyle = 'black';
-      ctx.rect(X[ind], Y[ind], barWidth, bottomY - Y[ind]);
-      ctx.fill();
-
-      info.style.left = X[ind] + (barWidth - info.offsetWidth)/2 + 'px';
-      info.style.top = Y[ind] - info.offsetHeight  - 15 + 'px'; // FIXME Info margin
-      info.appear();
-    }
-    else {
-      info.disappear()
-    }
-
-  }
-
-  function drawMini(x, y, w, h) {
-    ctx.beginPath();
-    ctx.globalAlpha = 0.4; // FIXME Alpha to const
-    ctx.fillStyle = color;
-    var X = getXCoords(w, oxLabels, w/oxLabels.length, CHART_GRID_PADDING);
-    var Y = getYCoords(h, values, getMax(values));
-
-    var barWidth = X[1] - X[0];
-    for (var i = 0; i < X.length; i++) {
-      ctx.rect(X[i], miniChartTopY + Y[i], barWidth, h - Y[i]);
-    }
-    ctx.fill();
   }
 
   // requestAnimationFrame(me.draw);
@@ -319,53 +369,3 @@ export function barChart(w, h, data) {
   init();
   return me.container;
 }
-
-const round = 1000;
-
-function getXCoords(width, X, step, offset=0) {
-  var coords = [];
-  for (var i = 0; i < X.length; i++) {
-    coords.push(Math.round((i*step + offset)*round)/round);
-  }
-  return coords;
-}
-
-function getYCoords(height, Y, max) { // FIXME Можно удалить, потому что есть getScreenY
-  var coords = []
-  for (var i = 0; i < Y.length; i++) {
-    coords.push(Math.floor(height - (Y[i]/max) * height));
-  }
-  return coords;
-}
-
-function getScreenY(height, y, max) {
-  var screenY = height - y*height/max;
-  return Math.floor(screenY);
-}
-
-var arr = []
-function perf(func, ...args) {
-  var before = performance.now();
-  func(...args);
-  var after = performance.now();
-  arr.push(after - before);
-  // console.warn('PERFORMANCE CHECK, ', func.name, ': ', after - before);
-  showArr()
-  // console.warn(getAverage(arr) ,'PERFORMANCE CHECK, ', func.name, ': ', after - before);
-}
-
-var showArr = debounce(function() {
-  console.log('perf average', getAverage(arr));
-  arr = []
-}, 300);
-
-function getAverage(arr) {
-  return arr.reduce((a, c) => a+c)/arr.length
-}
-
-// perf(foo)
-// perf(foo)
-//
-// function foo() {
-//   console.log('a')
-// }

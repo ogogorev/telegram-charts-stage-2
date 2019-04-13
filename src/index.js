@@ -8,8 +8,6 @@ import chart_data5 from '../data/chart5.json';
 import { barChart } from './charts/bar-chart';
 import { lineChart } from './charts/line-chart';
 
-console.log([1, 2, 3].slice(0, Number.POSITIVE_INFINITY))
-
 function main() {
 
   // console.log(chart_data1);
@@ -21,11 +19,11 @@ function main() {
 
   // var chart = createChart(400, 450, chart_data);
 
-  var chart = lineChart(400, 450, chart_data1);
-  document.body.append(chart);
-
-  // var chart = barChart(400, 450, chart_data4);
+  // var chart = lineChart(400, 450, chart_data1);
   // document.body.append(chart);
+
+  var chart = barChart(400, 450, chart_data4);
+  document.body.append(chart);
 }
 
 
@@ -33,11 +31,25 @@ window.onload = function() {
   main();
 }
 
-/*
+function testCanvas() {
+  var canvas = document.createElement('canvas');
+  canvas.width = 400;
+  canvas.height = 400;
+  var ctx = canvas.getContext('2d');
 
-line-chart
-- select
+  var X = [0, 50, 100, 150, 200, 250, 400]
+  var Y = [200, 0, 200, 0, 200, 0, 200]
 
+  var lastY = 0;
 
+  ctx.beginPath();
+  ctx.moveTo(X[0], Y[0]);
 
-*/
+  X.forEach((x, i) => {
+    ctx.lineTo(x, Y[i]);
+  })
+  ctx.lineTo(400, 400)
+  ctx.lineTo(0, 400)
+  ctx.fill();
+  document.body.append(canvas);
+}

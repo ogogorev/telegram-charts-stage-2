@@ -33,7 +33,7 @@ export function ChartBase(w, h, data) {
   this.canvas = document.createElement('canvas');
   this.canvas.width = w;
   this.canvas.height = h;
-  this.canvas.onclick = this.onCanvasClick;
+  this.canvas.onclick = this.onCanvasClick.bind(this);
   this.container.append(this.canvas);
   this.ctx = this.canvas.getContext('2d');
 
@@ -56,31 +56,37 @@ export function ChartBase(w, h, data) {
 
   this.initData();
   this.L = this.oxLabels.length - 1; // FIXME Rename
-
-  this.initDrawProps();
-  this.initOxProps();
-  this.initOyProps();
-  this.initMiniChartProps();
-
-  this.init();
 }
 
 ChartBase.prototype.initData = function(dataLength=Number.POSITIVE_INFINITY) {
   this.oxLabels = getDataColumnByName('x', this.data.columns).slice(0, dataLength).map(date => createLabelFromDate(date));
 
-  this.columnNames = Object.keys(this.data.names);
+  this.columnNames = Object.keys(this.data.names); // FIXME Remove
   this.columns = [];
-  this.colors = [];
+  // this.colors = [];
   for (var i = 0; i < this.columnNames.length; i++) {
     this.columns.push({
       id: this.columnNames[i],
       name: this.data.names[this.columnNames[i]],
       isOn: true,
+      color: this.data.colors[this.columnNames[i]],
       alpha: new AnimatedValue(1, Y_ANIMATION_TIME),
       values: getDataColumnByName(this.columnNames[i], this.data.columns).slice(0, dataLength)
     });
-    this.colors.push(this.data.colors[this.columnNames[i]]);
+    // this.colors.push();
   }
+}
+
+ChartBase.prototype.init = function() {
+  this.initDrawProps();
+  this.initOxProps();
+  this.initOyProps();
+  this.initMiniChartProps();
+
+  this.drawMini();
+  this.initInfo();
+  this.initButtons();
+  this.update();
 }
 
 ChartBase.prototype.initDrawProps = function() {
@@ -105,6 +111,7 @@ ChartBase.prototype.initDrawProps = function() {
 ChartBase.prototype.initOxProps = function() {
   this.oxLabelWidth = 50;
   this.labelWidthHalf = 15; // FIXME Rename
+  this.oxLabelsOffsetX = 0;
 
   this.countOnScreen = this.w/this.oxLabelWidth;
   this.currOxLabelsStep = 1;
@@ -128,25 +135,18 @@ ChartBase.prototype.initOyProps = function() {
   };
 }
 
-ChartBase.prototype.initMiniChartProps = function() {
+ChartBase.prototype.initMiniChartProps = function(dataLength=this.L) {
   this.miniChartX = CHART_GRID_PADDING;
   this.miniChartY = this.h - MINI_CHART_HEIGHT + 1;
   this.miniChartWidth = this.w - CHART_GRID_PADDING*2;
   this.miniChartHeight = MINI_CHART_HEIGHT;
-  this.miniChartStep = Math.round((this.miniChartWidth/(this.oxLabels.length-1))*this.round)/this.round;
-}
-
-ChartBase.prototype.init = function() {
-  this.drawMini();
-  this.initInfo();
-  this.initButtons();
-  this.update();
+  this.miniChartStep = Math.round((this.miniChartWidth/(dataLength))*this.round)/this.round;
 }
 
 ChartBase.prototype.initInfo = function() {
   this.info = createInfo();
-  for (var i = 0; i < this.columnNames.length; i++) {
-    this.info.addRow(this.data.names[this.columnNames[i]], 0);
+  for (var i = 0; i < this.columns.length; i++) {
+    this.info.addRow(this.columns[i].name, 0);
   }
   this.container.append(this.info);
 }
@@ -159,7 +159,7 @@ ChartBase.prototype.onCanvasClick = function(e) {
     this.selectedInd = -1;
   }
   this.draw();
-}
+};
 
 ChartBase.prototype.select = function(x) {
   this.selectedScreenX = x;
@@ -176,8 +176,6 @@ ChartBase.prototype.updateRange = function(left, right) {
   this.update();
 }
 
-// draw
-
 ChartBase.prototype.drawBg = function() {
   this.drawOxLabels(this.staticOxLabels, this.oxLabels.length - 1);
   this.drawOxLabels(this.dynamicOxLabels, this.oxLabels.length - 1 - this.dynamicOxLabels.step/2); // Говно какое-то
@@ -192,6 +190,10 @@ ChartBase.prototype.drawBg = function() {
   this.ctx.stroke();
 }
 
+ChartBase.prototype.calculateOxLabelsOffsetX = function () {
+  this.oxLabelsOffsetX = this.offsetX - this.labelWidthHalf;
+};
+
 ChartBase.prototype.drawOxLabels = function(oxLabelsProps, lastInd) {
   if (oxLabelsProps.alpha.value <= 0) return;
   while(lastInd > this.endInd) lastInd -= oxLabelsProps.step;
@@ -200,9 +202,8 @@ ChartBase.prototype.drawOxLabels = function(oxLabelsProps, lastInd) {
   this.ctx.globalAlpha = oxLabelsProps.alpha.value;
   this.ctx.fillStyle = 'black'; // FIXME color to consts
 
-  var offset = this.offsetX - this.labelWidthHalf;
   for (var i = lastInd; i >= this.startInd; i-=oxLabelsProps.step) {
-    this.ctx.fillText(this.oxLabels[i], Math.floor(i * this.barWidth + offset), this.oxLabelsBottomY - OXLABELS_HEIGHT/2);
+    this.ctx.fillText(this.oxLabels[i], Math.floor(i * this.barWidth + this.oxLabelsOffsetX), this.oxLabelsBottomY - OXLABELS_HEIGHT/2);
   }
 }
 
@@ -263,8 +264,9 @@ ChartBase.prototype.xToInd = function(x) {
 
 ChartBase.prototype.initButtons = function() {
   var buttonsContainer = document.createElement('div')
-  for (var i = 0; i < this.columnNames.length; i++) {
-    var b = createButton(this.colors[i], this.data.names[this.columnNames[i]], function(name, isOn) {
+  // for (var i = 0; i < this.columnNames.length; i++) {
+  for (var i = 0; i < this.columns.length; i++) {
+    var b = createButton(this.columns[i].color, this.columns[i].name, function(name, isOn) {
       this.buttonClicked(name, isOn);
     }.bind(this));
     buttonsContainer.append(b);
@@ -322,16 +324,22 @@ ChartBase.prototype.checkRedrawChartsContent = function(now) {
 
 ChartBase.prototype.drawChartContent = function() {}
 
+ChartBase.prototype.calculateValuesMaxY = function() {
+  return getMatrixMax(this.columns.filter(c => c.isOn).map(c => c.values.slice(this.startInd, this.endInd+1)));
+}
+
 ChartBase.prototype.update = function() {
   // startInd = Math.floor(me.previewLeftX * L);
   this.startInd = Math.max(Math.ceil(this.previewLeftX * this.L) - 1, 0);
   this.endInd = Math.ceil(this.previewRightX * this.L);
   this.barWidth = this.gridWidth/(this.L*(this.previewRightX-this.previewLeftX));
-  this.offsetX = calculateOffsetX(this.gridWidth, CHART_GRID_PADDING, this.previewLeftX, this.previewRightX); // новый
+  this.offsetX = calculateOffsetX(this.gridWidth, CHART_GRID_PADDING, this.previewLeftX, this.previewRightX);
 
-  var maxY = getMatrixMax(this.columns.filter(c => c.isOn).map(c => c.values.slice(this.startInd, this.endInd+1)));
+
+  var maxY = this.calculateValuesMaxY();
   var newGridStepY = getStepForGridValues(maxY);
 
+  this.calculateOxLabelsOffsetX();
   this.updateOxLabels();
 
   if (this.gridStepY !== newGridStepY) {

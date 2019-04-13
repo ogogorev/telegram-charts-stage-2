@@ -18,6 +18,7 @@ export function lineChart(w, h, data) {
 function LineChart(w, h, data) {
   console.log(data);
   ChartBase.apply(this, arguments);
+  this.init();
 }
 
 LineChart.prototype = Object.create(ChartBase.prototype);
@@ -51,7 +52,7 @@ LineChart.prototype.drawChartContent = function() {
 
   for (var i = 0; i < this.columns.length; i++) {
     var Y = getYCoords(this.bottomY, this.columns[i].values.slice(sI, eI+1), this.gridMaxY.value);
-    this.drawLine(X, Y, this.colors[i], this.columns[i].alpha.value);
+    this.drawLine(X, Y, this.columns[i].color, this.columns[i].alpha.value);
   }
 }
 
@@ -120,6 +121,6 @@ LineChart.prototype.drawMini = function() {
   this.ctx.beginPath();
   for (var i = 0; i < this.columns.length; i++) {
     var Y = getYCoords(this.miniChartHeight, this.columns[i].values, max).map(y => this.miniChartY + y);
-    this.drawLine(X, Y, this.colors[i], this.columns[i].alpha.value);
+    this.drawLine(X, Y, this.columns[i].color, this.columns[i].alpha.value);
   }
 }
