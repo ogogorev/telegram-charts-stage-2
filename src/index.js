@@ -8,6 +8,8 @@ import chart_data5 from '../data/chart5.json';
 import { barChart } from './charts/bar-chart';
 import { lineChart } from './charts/line-chart';
 
+console.log([1, 2, 3].slice(0, Number.POSITIVE_INFINITY))
+
 function main() {
 
   // console.log(chart_data1);
