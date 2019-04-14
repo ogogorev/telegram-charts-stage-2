@@ -241,6 +241,7 @@ ChartBase.prototype.drawOyLabels = function(oyLabels) {
   if (oyLabels.alpha.value <= 0) return;
   this.ctx.globalAlpha = oyLabels.alpha.value;
   this.ctx.strokeStyle = 'black'; // FIXME color to const
+  this.ctx.fillStyle = 'black'; // FIXME color to const
   this.ctx.lineWidth = 1;
   this.ctx.beginPath();
 
@@ -250,9 +251,6 @@ ChartBase.prototype.drawOyLabels = function(oyLabels) {
 
   for (var i = 1; i < oyLabels.labels.length; i++) {
     var y = offset - i * this.gridLinesHeight;
-
-    console.log('draw oy', offset, y);
-    console.log('-================');
 
     this.ctx.fillText(
       oyLabels.labels[i],
@@ -309,9 +307,7 @@ ChartBase.prototype.draw = function() {
     this.checkRedrawBg(now);
     this.checkRedrawChartsContent(now);
 
-    this.drawBg();
-    this.drawChartContent();
-    this.drawSelected();
+    this.drawSequence();
 
     if (this.needDrawMini) {
       this.needDrawMini = false;
@@ -324,6 +320,12 @@ ChartBase.prototype.draw = function() {
     }
 
   }.bind(this));
+}
+
+ChartBase.prototype.drawSequence = function() {
+  this.drawBg();
+  this.drawChartContent();
+  this.drawSelected();
 }
 
 ChartBase.prototype.checkRedrawBg = function(now) {

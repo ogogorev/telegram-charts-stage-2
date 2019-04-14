@@ -21,7 +21,7 @@ export function barChart(w, h, data) {
   return chart.container;
 }
 
-function BarChart(w, h, data) {
+export function BarChart(w, h, data) {
   console.log(data);
   ChartBase.apply(this, arguments);
   this.L++;
@@ -64,6 +64,12 @@ BarChart.prototype.drawMini = function() {
   }
   this.ctx.fill();
 }
+
+BarChart.prototype.drawSequence = function () {
+  this.drawChartContent();
+  this.drawBg();
+  this.drawSelected();
+};
 
 BarChart.prototype.initButtons = function () {};
 

@@ -64,7 +64,7 @@ export function getGridValuesByMax(max) { // FIXME Отвязать от 6
 // console.log('sdsdf', getGridValuesByMax(getStepForGridValues(91)));
 
 export function getStepForGridValues(max, k=1) { // FIXME Отвязать от 6
-  if (max == Number.POSITIVE_INFINITY || max == Number.NEGATIVE_INFINITY) return 0;
+  if (max == Number.POSITIVE_INFINITY || max == Number.NEGATIVE_INFINITY || max === 0) return 0;
 
   if (max > 100) return getStepForGridValues(max/10, k*10);
   if (max < 1) return getStepForGridValues(max*10, k/10);
@@ -96,4 +96,30 @@ export function getDataColumnByName(name, data) {
 
 export function transpose(arr) {
   return arr[0].map((col, i) => arr.map(row => row[i]));
+}
+
+export function round(n, c=0) {
+  return Math.round(n*Math.pow(10, c))/Math.pow(10, c);
+}
+
+export function sum(array) {
+  return array.reduce((a, c) => a + c);
+}
+
+export function getPercents(values) {
+  return values[0].map((_, i) => {
+    var sum = values.map(c => c[i]).reduce((a, c) => a+c);
+    if (sum === 0) return values.map(c => 0);
+    return values.map(c => {
+      return Math.round(10000*c[i]/sum)/100;
+    });
+  });
+}
+
+export function getStackedPercents(values) {
+  return getPercents(values).map((row, i) => {
+    return row.map((p, i) => {
+      return round(sum(row.slice(0, i+1)), 2)
+    })
+  })
 }

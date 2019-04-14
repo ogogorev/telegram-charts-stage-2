@@ -7,40 +7,14 @@ import {
   debounce, getGridValuesByMax,
   getStepForGridValues,
   getDataColumnByName,
-  transpose
+  transpose,
+  round, sum, getPercents, getStackedPercents
 } from '../utils';
 import { OXLABELS_HEIGHT, CHART_GRID_PADDING, GRID_LINES_COUNT, PREVIEW_HEIGHT } from '../consts';
 
 const Y_ANIMATION_TIME = .3; // FIXME
 const OY_LABELS_MARGIN_TOP = -10;
 const MARGIN_TOP = 20;
-
-
-function round(n, c=0) {
-  return Math.round(n*Math.pow(10, c))/Math.pow(10, c);
-}
-
-function sum(array) {
-  return array.reduce((a, c) => a + c);
-}
-
-function getPercents(values) {
-  return values[0].map((_, i) => {
-    var sum = values.map(c => c[i]).reduce((a, c) => a+c);
-    if (sum === 0) return values.map(c => 0);
-    return values.map(c => {
-      return Math.round(10000*c[i]/sum)/100;
-    });
-  });
-}
-
-function getStackedPercents(values) {
-  return getPercents(values).map((row, i) => {
-    return row.map((p, i) => {
-      return round(sum(row.slice(0, i+1)), 2)
-    })
-  })
-}
 
 // var v = [
 //   [10, 22, 3, 14, 9],

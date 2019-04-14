@@ -19,7 +19,11 @@ export function AnimatedValue(value, duration=0.5) {
   }
 }
 AnimatedValue.prototype.set = function(newValue, now=performance.now(), animated=false) {
+  // console.log('anim set', newValue);
   if (!animated) { this.value = newValue;return; }
+  if (newValue === this.toValue) { return; }
+
+
 
   if (isNaN(this.value)) {
     return;
