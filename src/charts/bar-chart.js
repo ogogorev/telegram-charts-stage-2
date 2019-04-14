@@ -1,4 +1,4 @@
-import { ChartBase, getScreenXByInd, getYCoords } from './chart';
+import { ChartBase, getScreenXByInd, getYCoords, getScreenY } from './chart';
 import { AnimatedValue, AnimatedArray, main } from '../animations';
 import { createInfo } from './point-info';
 import {
@@ -89,22 +89,31 @@ BarChart.prototype.drawChartContent = function() {
   this.ctx.fill();
 }
 
-BarChart.prototype.drawSelected = function () {
+BarChart.prototype.getIndByScreenX = function (x, step=this.barWidth, offset=this.offsetX) {
+  return Math.floor((x - offset)/step);
+};
 
-  // if (selectedInd >= startInd && selectedInd <= endInd) {
-  //   var ind = selectedInd - startInd;
-  //   ctx.beginPath();
-  //   ctx.fillStyle = 'black';
-  //   ctx.rect(X[ind], Y[ind], barWidth, bottomY - Y[ind]);
-  //   ctx.fill();
-  //
-  //   info.style.left = X[ind] + (barWidth - info.offsetWidth)/2 + 'px';
-  //   info.style.top = Y[ind] - info.offsetHeight  - 15 + 'px'; // FIXME Info margin
-  //   info.appear();
-  // }
-  // else {
-  //   info.disappear()
-  // }
+BarChart.prototype.drawSelected = function () {
+  if (this.selectedInd > 0) {
+
+    var barW = Math.round(this.barWidth*this.round)/this.round;
+
+    var selectedIndX = this.getScreenXByInd(this.selectedInd);
+    var selectedIndY = Math.floor(getScreenY(this.bottomY, this.columns[0].values[this.selectedInd], this.gridMaxY.value));
+
+    this.ctx.beginPath();
+    this.ctx.fillStyle = 'black';
+    this.ctx.rect(selectedIndX, selectedIndY, barW, this.bottomY - selectedIndY);
+    this.ctx.fill();
+
+    this.info.style.left = this.selectedScreenX - this.info.offsetWidth - 30 + 'px';
+    // this.info.style.top = Y[ind] - this.info.offsetHeight  - 15 + 'px'; // FIXME this.info margin
+    this.info.style.top = this.selectedScreenY - this.info.offsetHeight/2 + 'px'; // FIXME this.info margin
+    this.info.appear();
+  }
+  else {
+    this.info.disappear()
+  }
 
 };
 

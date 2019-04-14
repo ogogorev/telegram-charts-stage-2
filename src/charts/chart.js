@@ -33,7 +33,8 @@ export function ChartBase(w, h, data) {
   this.canvas = document.createElement('canvas');
   this.canvas.width = w;
   this.canvas.height = h;
-  this.canvas.onclick = this.onCanvasClick.bind(this);
+  // this.canvas.onclick = this.onCanvasClick.bind(this);
+  this.canvas.onmouseenter = this.onMouseEnter.bind(this);
   this.container.append(this.canvas);
   this.ctx = this.canvas.getContext('2d');
 
@@ -103,6 +104,7 @@ ChartBase.prototype.initDrawProps = function() {
   this.endInd = 0;
   this.selectedInd = -1;
   this.selectedScreenX = 0;
+  this.selectedScreenY = 0;
 }
 
 ChartBase.prototype.initOxProps = function() {
@@ -149,19 +151,20 @@ ChartBase.prototype.initInfo = function() {
   this.container.append(this.info);
 }
 
-ChartBase.prototype.onCanvasClick = function(e) {
-  if (e.layerY <= this.bottomY) {
-    select(e.layerX)
-  }
-  else {
-    this.selectedInd = -1;
-  }
-  this.draw();
-};
+// ChartBase.prototype.onCanvasClick = function(e) {
+//   if (e.layerY <= this.bottomY) {
+//     select(e.layerX)
+//   }
+//   else {
+//     this.selectedInd = -1;
+//   }
+//   this.draw();
+// };
 
-ChartBase.prototype.select = function(x) {
+ChartBase.prototype.select = function(x, y) {
   this.selectedScreenX = x;
-  this.selectedInd = xToInd(x);
+  this.selectedScreenY = y;
+  this.selectedInd = this.getIndByScreenX(x);
   this.info.setTitle(this.oxLabels[this.selectedInd]);
   this.columns.forEach(c => {
     this.info.setRowValue(c.name, c.values[this.selectedInd]);
@@ -261,7 +264,16 @@ ChartBase.prototype.drawOyLabels = function(oyLabels) {
 }
 
 ChartBase.prototype.xToInd = function(x) {
-  var indOnScreen = Math.round((x - this.offsetX)/this.barWidth);
+
+
+  console.log('=======================');
+  console.log('x', x/this.barWidth);
+  console.log('floor', Math.floor(x/this.barWidth));
+  console.log('ceil', Math.ceil(x/this.barWidth));
+  console.log('round', Math.round(x/this.barWidth));
+
+
+  var indOnScreen = Math.round(x/this.barWidth);
   var ind = this.startInd + indOnScreen;
   return ind;
 }
@@ -297,6 +309,7 @@ ChartBase.prototype.draw = function() {
     this.drawBg();
     this.drawChartContent();
     this.drawSelected();
+
     if (this.needDrawMini) {
       this.needDrawMini = false;
       this.drawMini();
@@ -379,12 +392,46 @@ ChartBase.prototype.update = function() {
   this.draw();
 }
 
+ChartBase.prototype.onMouseEnter = function(e) {
+  this.canvas.onmousemove = this.onMouseMove.bind(this);
+  this.canvas.onmouseleave = this.onMouseLeave.bind(this);
+}
+
+ChartBase.prototype.onMouseMove = function (e) {
+  if (e.layerY <= this.bottomY) {
+    this.select(e.layerX, e.layerY)
+  }
+  else {
+    this.selectedInd = -1;
+  }
+  this.draw();
+}
+
+ChartBase.prototype.onMouseLeave = function () {
+  this.selectedInd = -1;
+  this.canvas.onmousemove = null;
+  this.canvas.onmouseleave = null;
+  this.draw();
+}
+
+ChartBase.prototype.getScreenXByInd = function (i, step=this.barWidth, offset=this.offsetX) {
+  return i*step + offset;
+};
+
+ChartBase.prototype.getIndByScreenX = function (x, step=this.barWidth, offset=this.offsetX) {
+  return Math.round((x - offset)/step);
+};
+
 export function calculateOffsetX(w, padding, left, right) {
   return w + padding - right*w/(right-left);
 }
 
 export function getScreenXByInd(i, step, offset=0) {
   return i*step + offset;
+}
+
+export function getIndByScreenX(x, step, offset=0) {
+  return Math.round((x - offset)/step);
 }
 
 export function getYCoords(height, Y, max) { // FIXME Можно удалить, потому что есть getScreenY

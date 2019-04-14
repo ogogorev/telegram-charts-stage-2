@@ -1,4 +1,4 @@
-import { ChartBase, getScreenXByInd, getYCoords } from './chart';
+import { ChartBase, getScreenXByInd, getYCoords, getScreenY } from './chart';
 import { AnimatedValue, AnimatedArray, main } from '../animations';
 import {
   createLabelFromDate,
@@ -99,35 +99,59 @@ LineChart.prototype.drawLine = function(X, Y, color, alpha=1) {
 }
 
 LineChart.prototype.drawSelected = function() {
-  if (this.selectedInd >= this.startind && this.selectedInd <= this.endInd) {
-    var ind = this.selectedInd - this.startind;
+  if (this.selectedInd > 0) {
+
+    var barW = Math.round(this.barWidth*this.round)/this.round;
+    var selectedIndX = Math.floor(this.getScreenXByInd(this.selectedInd, barW));
+    var maxScreenY = 0;
+
+    // console.log('selected');
+
+    var ind = this.selectedInd - this.startInd;
     var filteredColumns = this.columns.filter(c => c.isOn);
 
     this.ctx.beginPath();
     this.ctx.strokeStyle = '#000000';
-    this.ctx.moveTo(selectedScreenX, 0);
-    this.ctx.lineTo(selectedScreenX, bottomY);
+    this.ctx.lineWidth = 1;
+    this.ctx.moveTo(this.selectedScreenX + 0.5, 0);
+    this.ctx.lineTo(this.selectedScreenX + 0.5, this.bottomY);
     this.ctx.stroke();
 
     this.ctx.beginPath();
     this.ctx.fillStyle = '#FFFFFF'; // FIXME Color
     filteredColumns.forEach(c => {
-      // this.ctx.arc(Math.floor(X[ind]), Math.floor(getScreenY(bottomY, c.values[this.selectedInd], gridMaxY.value)), 5.5, 0, 2 * Math.PI);
-      // this.ctx.arc(Math.floor(X[ind]), Math.floor(getScreenY(bottomY, c.values[this.selectedInd], gridMaxY.value)), 5.5, 0, 2 * Math.PI);
+      var y = Math.floor(getScreenY(this.bottomY, c.values[this.selectedInd], this.getGridMaxForColumn(c)));
+      if (y > maxScreenY) maxScreenY = y;
+
+      this.ctx.arc(
+        selectedIndX,
+        y,
+        5.5, // FIXME Radius to const
+        0,
+        2 * Math.PI
+      );
     });
     this.ctx.fill();
 
     filteredColumns.forEach(c => {
       this.ctx.beginPath();
-      this.ctx.strokeStyle = data.colors[c.id]; // FIXME Color
-      // this.ctx.arc(Math.floor(X[ind]), Math.floor(getScreenY(bottomY, c.values[this.selectedInd], gridMaxY.value)), 5.5, 0, 2 * Math.PI);
-      this.ctx.arc(Math.floor(getScreenXByInd(this.selectedInd, barW, this.offsetX)), Math.floor(getScreenY(bottomY, c.values[this.selectedInd], gridMaxY.value)), 5.5, 0, 2 * Math.PI);
+      this.ctx.lineWidth = 2;
+      this.ctx.strokeStyle = this.data.colors[c.id]; // FIXME Color
+      this.ctx.arc(
+        selectedIndX,
+        Math.floor(getScreenY(this.bottomY, c.values[this.selectedInd], this.getGridMaxForColumn(c))),
+        5.5,
+        0,
+        2 * Math.PI
+      );
       this.ctx.stroke();
       this.ctx.closePath();
     });
 
-    this.info.style.left = X[ind] + (this.barWidth - this.info.offsetWidth)/2 + 'px';
-    this.info.style.top = Y[ind] - this.info.offsetHeight  - 15 + 'px'; // FIXME this.info margin
+    // this.info.style.left = selectedIndX + (this.barWidth - this.info.offsetWidth)/2 + 'px';
+    this.info.style.left = this.selectedScreenX - this.info.offsetWidth - 30 + 'px';
+    // this.info.style.top = Y[ind] - this.info.offsetHeight  - 15 + 'px'; // FIXME this.info margin
+    this.info.style.top = this.selectedScreenY - this.info.offsetHeight/2 + 'px'; // FIXME this.info margin
     this.info.appear();
   }
   else {
