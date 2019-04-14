@@ -8,6 +8,7 @@ import chart_data5 from '../data/chart5.json';
 import { lineChart } from './charts/line-chart';
 import { twoAxesLineChart } from './charts/two-axes-line-chart';
 import { barChart } from './charts/bar-chart';
+import { percentageStackedAreaChart } from './charts/stacked-area-chart';
 
 function main() {
 
@@ -26,7 +27,10 @@ function main() {
   // var chart = twoAxesLineChart(400, 450, chart_data2);
   // document.body.append(chart);
 
-  var chart = barChart(400, 450, chart_data4);
+  // var chart = barChart(400, 450, chart_data4);
+  // document.body.append(chart);
+
+  var chart = percentageStackedAreaChart(400, 450, chart_data5);
   document.body.append(chart);
 }
 

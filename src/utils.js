@@ -93,3 +93,7 @@ export function getDataColumnByName(name, data) {
   }
   return [];
 }
+
+export function transpose(arr) {
+  return arr[0].map((col, i) => arr.map(row => row[i]));
+}

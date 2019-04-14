@@ -28,11 +28,17 @@ AnimatedValue.prototype.set = function(newValue, now=performance.now(), animated
   this.started = now;
   this.from = this.value;
   this.to = newValue;
-  this.nextTick();
-};
+  this.nextTick(now);
+}
 AnimatedValue.prototype.nextTick = function(now, name) {
   if (this.started) {
     var p = (now - this.started)/this.duration;
+
+    // if (name) {
+    //   console.log('next tick', name);
+    //   console.log(this.value);
+    // }
+
     if (p > 1) p = 1;
     if (p < 0) p = 0;
     this.value = Math.round((this.from + (this.to - this.from) * this.ease(p))*100)/100;

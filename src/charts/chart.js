@@ -166,7 +166,7 @@ ChartBase.prototype.select = function(x, y) {
   this.selectedScreenY = y;
   this.selectedInd = this.getIndByScreenX(x);
   this.info.setTitle(this.oxLabels[this.selectedInd]);
-  this.columns.forEach(c => {
+  this.columns.filter(c => c.isOn).forEach(c => {
     this.info.setRowValue(c.name, c.values[this.selectedInd]);
   });
 }
@@ -250,6 +250,9 @@ ChartBase.prototype.drawOyLabels = function(oyLabels) {
 
   for (var i = 1; i < oyLabels.labels.length; i++) {
     var y = offset - i * this.gridLinesHeight;
+
+    console.log('draw oy', offset, y);
+    console.log('-================');
 
     this.ctx.fillText(
       oyLabels.labels[i],
