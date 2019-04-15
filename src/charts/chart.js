@@ -1,5 +1,5 @@
 import { barChart } from './bar-chart';
-import { preview } from './preview-canvas';
+import { preview } from './preview-ui';
 import { createInfo } from './point-info';
 import { createButton } from './button';
 import { AnimatedValue } from '../animations';
@@ -11,7 +11,7 @@ import {
   getStepForGridValues,
   getDataColumnByName
 } from '../utils';
-import { OXLABELS_HEIGHT, CHART_GRID_PADDING, GRID_LINES_COUNT, PREVIEW_HEIGHT } from '../consts';
+import { OXLABELS_HEIGHT, CHART_GRID_PADDING, GRID_LINES_COUNT, PREVIEW_HEIGHT, PREVIEW_INNER_MARGIN_TOP } from '../consts';
 
 
 const Y_ANIMATION_TIME = .3;
@@ -40,7 +40,7 @@ export function ChartBase(w, h, data) {
 
   this.preview = preview(this.w - CHART_GRID_PADDING*2, PREVIEW_HEIGHT);
   this.preview.style.position = 'absolute';
-  this.preview.style.bottom = 0;
+  this.preview.style.bottom = -PREVIEW_INNER_MARGIN_TOP + 'px';
   this.preview.style.left = CHART_GRID_PADDING + 'px';
   this.container.append(this.preview);
   this.preview.onupdate = function(state) {

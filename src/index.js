@@ -28,14 +28,16 @@ function main() {
   // var chart = twoAxesLineChart(400, 450, chart_data2);
   // document.body.append(chart);
 
-  var chart = stackedBarChart(400, 450, chart_data3);
-  document.body.append(chart);
+  // var chart = stackedBarChart(400, 450, chart_data3);
+  // document.body.append(chart);
 
   // var chart = barChart(400, 450, chart_data4);
   // document.body.append(chart);
 
-  // var chart = percentageStackedAreaChart(400, 450, chart_data5);
-  // document.body.append(chart);
+  var chart = percentageStackedAreaChart(400, 450, chart_data5);
+  document.body.append(chart);
+
+  // testCanvas();
 }
 
 
@@ -49,19 +51,14 @@ function testCanvas() {
   canvas.height = 400;
   var ctx = canvas.getContext('2d');
 
-  var X = [0, 50, 100, 150, 200, 250, 400]
-  var Y = [200, 0, 200, 0, 200, 0, 200]
-
-  var lastY = 0;
+  // var lastY = 0;
 
   ctx.beginPath();
-  ctx.moveTo(X[0], Y[0]);
+  ctx.arc(50,50,50,1*Math.PI,1.5*Math.PI)
 
-  X.forEach((x, i) => {
-    ctx.lineTo(x, Y[i]);
-  })
-  ctx.lineTo(400, 400)
-  ctx.lineTo(0, 400)
+  ctx.moveTo(50, 0);
+  ctx.lineTo(0, 0);
+  ctx.lineTo(0, 50);
   ctx.fill();
   document.body.append(canvas);
 }
