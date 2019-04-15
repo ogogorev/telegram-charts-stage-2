@@ -136,7 +136,9 @@ ChartBase.prototype.updateWidth = function() {
   this.countOnScreen = this.w/this.oxLabelWidth;
   this.previewChartWidth = this.w - CHART_GRID_PADDING*2;
   this.previewChartStep = Math.round((this.previewChartWidth/(this.L))*this.round)/this.round;
-  this.buttonsContainer.style.width = this.w - CHART_GRID_PADDING*2 + 'px';
+  if (this.buttonsContainer) {
+    this.buttonsContainer.style.width = this.w - CHART_GRID_PADDING*2 + 'px';
+  }
 
   this.needDrawPreview = true;
   this.update();
@@ -462,10 +464,10 @@ ChartBase.prototype.draw = function() {
     // this.ctx.clearRect(0, 0, this.w, this.oxLabelsBottomY);
     this.ctx.clearRect(0, 0, this.w, this.previewChartY);
 
-    this.ctx.beginPath();
-    this.ctx.strokeStyle = '#000000'
-    this.ctx.rect(0, 0, this.w, this.bottomY);
-    this.ctx.stroke()
+    // this.ctx.beginPath();
+    // this.ctx.strokeStyle = '#000000'
+    // this.ctx.rect(0, 0, this.w, this.bottomY);
+    // this.ctx.stroke()
 
     if (this.updateOxLabels()) this.needRedraw = true;
 

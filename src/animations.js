@@ -11,14 +11,18 @@ export function main() {
 
 }
 
-export function AnimatedValue(value, duration=0.5) {
+export function AnimatedValue(value, duration) {
+  duration = duration || 0.5;
   this.value = value;
   this.duration = duration * 1000;
   this.ease = function(t) {
     return t*(2-t);
   }
 }
-AnimatedValue.prototype.set = function(newValue, now=performance.now(), animated=false) {
+// AnimatedValue.prototype.set = function(newValue, now=performance.now(), animated=false) {
+AnimatedValue.prototype.set = function(newValue, now, animated) {
+  now = now || performance.now();
+  animated = animated || false;
   // console.log('anim set', newValue);
   if (!animated) { this.value = newValue;return; }
   if (newValue === this.toValue) { return; }

@@ -58,63 +58,176 @@ export function preview(w, h) {
   }
   setTheme(PREVIEW_DAY_THEME);
 
-  canvas.onmousedown = function(e) {
-    // console.log('mouse down', e);
+  function leftZoneUpdate(x) {
+    if (leftX > rightX - PREVIEW_MIN_WIDTH) leftX = rightX - PREVIEW_MIN_WIDTH;
+    else if (leftX < 0) leftX = 0;
+    // requestAnimationFrame(draw);
+    // updateState();
 
-    if (isLeftZone(e.offsetX)) {
+    requestAnimationFrame(function() {
+      draw();
+      updateState();
+    });
+  }
+
+  function centralZoneUpdate(currWidth) {
+    if (leftX < 0) leftX = 0;
+    if (leftX > canvas.width - currWidth) leftX = canvas.width - currWidth;
+    rightX = leftX + currWidth;
+    // requestAnimationFrame(draw);
+    // updateState();
+
+    requestAnimationFrame(function() {
+      draw();
+      updateState();
+    });
+  }
+
+  function rightZoneUpdate(x) {
+    if (rightX < leftX + PREVIEW_MIN_WIDTH) rightX = leftX + PREVIEW_MIN_WIDTH;
+    else if (rightX > canvas.width) rightX = canvas.width;
+    // requestAnimationFrame(draw);
+    // updateState();
+
+    requestAnimationFrame(function() {
+      draw();
+      updateState();
+    });
+  }
+
+  canvas.onmousedown = function(e) {
+    console.log('mouse down', e);
+
+    // if (isLeftZone(e.offsetX)) {
+    if (isLeftZone(e.clientX - canvas.getBoundingClientRect().x)) {
+      // leftZone(e.clientX);
       var offsetLeftX = leftX - e.clientX;
 
       onmousemove = function(e) { // TODO Отвязать от window! Привязать к основному контейнеру
         leftX = e.clientX + offsetLeftX;
-        if (leftX > rightX - PREVIEW_MIN_WIDTH) leftX = rightX - PREVIEW_MIN_WIDTH;
-        else if (leftX < 0) leftX = 0;
-        // requestAnimationFrame(draw);
-        // updateState();
-
-        requestAnimationFrame(function() {
-          draw();
-          updateState();
-        });
+        leftZoneUpdate();
+        // if (leftX > rightX - PREVIEW_MIN_WIDTH) leftX = rightX - PREVIEW_MIN_WIDTH;
+        // else if (leftX < 0) leftX = 0;
+        // // requestAnimationFrame(draw);
+        // // updateState();
+        //
+        // requestAnimationFrame(function() {
+        //   draw();
+        //   updateState();
+        // });
       };
     }
-    else if (isCentralZone(e.offsetX)) {
+    else if (isCentralZone(e.clientX - canvas.getBoundingClientRect().x)) {
+      // centralZone(e.clientX);
+
       var offsetLeftX = leftX - e.clientX;
       var currWidth = rightX - leftX;
 
       onmousemove = function(e) {
         leftX = e.clientX + offsetLeftX;
-        if (leftX < 0) leftX = 0;
-        if (leftX > canvas.width - currWidth) leftX = canvas.width - currWidth;
-        rightX = leftX + currWidth;
-        // requestAnimationFrame(draw);
-        // updateState();
-
-        requestAnimationFrame(function() {
-          draw();
-          updateState();
-        });
+        centralZoneUpdate(currWidth);
+        // if (leftX < 0) leftX = 0;
+        // if (leftX > canvas.width - currWidth) leftX = canvas.width - currWidth;
+        // rightX = leftX + currWidth;
+        // // requestAnimationFrame(draw);
+        // // updateState();
+        //
+        // requestAnimationFrame(function() {
+        //   draw();
+        //   updateState();
+        // });
       };
     }
-    else if (isRightZone(e.offsetX)) {
+    else if (isRightZone(e.clientX - canvas.getBoundingClientRect().x)) {
+      // rightZone(e.clientX);
       var offsetRightX = rightX - e.clientX;
 
       onmousemove = function(e) {
         rightX = e.clientX + offsetRightX;
-        if (rightX < leftX + PREVIEW_MIN_WIDTH) rightX = leftX + PREVIEW_MIN_WIDTH;
-        else if (rightX > canvas.width) rightX = canvas.width;
-        // requestAnimationFrame(draw);
-        // updateState();
-
-        requestAnimationFrame(function() {
-          draw();
-          updateState();
-        });
+        rightZoneUpdate();
+        // if (rightX < leftX + PREVIEW_MIN_WIDTH) rightX = leftX + PREVIEW_MIN_WIDTH;
+        // else if (rightX > canvas.width) rightX = canvas.width;
+        // // requestAnimationFrame(draw);
+        // // updateState();
+        //
+        // requestAnimationFrame(function() {
+        //   draw();
+        //   updateState();
+        // });
       };
     }
 
     onmouseup = function(e) {
       onmousemove = null;
       onmouseup = null;
+    }
+
+    return false;
+  }
+
+  canvas.ontouchstart = function(e) {
+    console.log('mouse down', e);
+
+    // console.log('touch ', canvas.getBoundingClientRect().x);
+    // console.log('touch ', e.touches[0].clientX - canvas.getBoundingClientRect().x);
+
+    if (isLeftZone(e.touches[0].clientX - canvas.getBoundingClientRect().x)) {
+      var offsetLeftX = leftX - e.touches[0].clientX;
+
+      ontouchmove = function(e) { // TODO Отвязать от window! Привязать к основному контейнеру
+        leftX = e.touches[0].clientX + offsetLeftX;
+        leftZoneUpdate();
+        // if (leftX > rightX - PREVIEW_MIN_WIDTH) leftX = rightX - PREVIEW_MIN_WIDTH;
+        // else if (leftX < 0) leftX = 0;
+        // // requestAnimationFrame(draw);
+        // // updateState();
+        //
+        // requestAnimationFrame(function() {
+        //   draw();
+        //   updateState();
+        // });
+      };
+    }
+    else if (isCentralZone(e.touches[0].clientX - canvas.getBoundingClientRect().x)) {
+      var offsetLeftX = leftX - e.touches[0].clientX;
+      var currWidth = rightX - leftX;
+
+      ontouchmove = function(e) {
+        leftX = e.touches[0].clientX + offsetLeftX;
+        centralZoneUpdate(currWidth);
+        // if (leftX < 0) leftX = 0;
+        // if (leftX > canvas.width - currWidth) leftX = canvas.width - currWidth;
+        // rightX = leftX + currWidth;
+        // // requestAnimationFrame(draw);
+        // // updateState();
+        //
+        // requestAnimationFrame(function() {
+        //   draw();
+        //   updateState();
+        // });
+      };
+    }
+    else if (isRightZone(e.touches[0].clientX - canvas.getBoundingClientRect().x)) {
+      var offsetRightX = rightX - e.touches[0].clientX;
+
+      ontouchmove = function(e) {
+        rightX = e.touches[0].clientX + offsetRightX;
+        rightZoneUpdate();
+        // if (rightX < leftX + PREVIEW_MIN_WIDTH) rightX = leftX + PREVIEW_MIN_WIDTH;
+        // else if (rightX > canvas.width) rightX = canvas.width;
+        // // requestAnimationFrame(draw);
+        // // updateState();
+        //
+        // requestAnimationFrame(function() {
+        //   draw();
+        //   updateState();
+        // });
+      };
+    }
+
+    ontouchend = function(e) {
+      ontouchmove = null;
+      ontouchend = null;
     }
 
     return false;

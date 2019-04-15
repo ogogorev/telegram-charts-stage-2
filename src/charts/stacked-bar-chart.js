@@ -69,7 +69,7 @@ StackedBarChart.prototype.onResize = debounce(function(e) {
 }, 20);
 
 StackedBarChart.prototype.initData = function() {
-  ChartBase.prototype.initData.call(this, 10);
+  ChartBase.prototype.initData.call(this);
 
   this.stackedColumns = this.columns.map(c => c.values.map(
     v => 0
