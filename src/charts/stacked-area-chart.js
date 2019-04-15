@@ -167,8 +167,8 @@ PercentageStackedAreaChart.prototype.buttonClicked = function(name, isOn) {
 
 PercentageStackedAreaChart.prototype.drawChartContent = function() {
   var barW = Math.round(this.barWidth*this.round)/this.round;
-  var sI = Math.max(this.startInd-1, 0);
-  var eI = Math.min(this.endInd+1, this.L);
+  var sI = Math.max(this.startInd - this.drawIndOffset, 0);
+  var eI = Math.min(this.endInd + this.drawIndOffset, this.L);
 
   var X = [];
   for (var i = sI; i < eI+1; i++) {

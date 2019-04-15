@@ -79,6 +79,23 @@ TwoAxesLineChart.prototype.checkRedrawChartsContent = function(now) {
   if (this.gridPreviewMaxYRight.nextTick(now)) this.needDrawPreview = true;
 }
 
+TwoAxesLineChart.prototype.drawZeroLine = function () {
+  this.ctx.beginPath();
+  this.ctx.globalAlpha = 1;
+
+  this.ctx.fillStyle = this.columns[0].color;
+  this.ctx.fillText(0, CHART_GRID_PADDING, this.bottomY + OY_LABELS_MARGIN_TOP);
+  this.ctx.fillStyle = this.columns[1].color;
+  this.ctx.fillText(
+    0,
+    CHART_GRID_PADDING + this.gridWidth - this.ctx.measureText(0).width,
+    this.bottomY + OY_LABELS_MARGIN_TOP
+  );
+  this.ctx.moveTo(CHART_GRID_PADDING, this.bottomY + 0.5);
+  this.ctx.lineTo(this.w - CHART_GRID_PADDING, this.bottomY + 0.5);
+  this.ctx.stroke();
+};
+
 TwoAxesLineChart.prototype.drawOyLabels = function(oyLabels) {
   // if (oyLabels.alpha.value <= 0 && oyLabels.alphaRight.value <= 0) return;
   if (oyLabels.alpha.value > 0) {
@@ -97,20 +114,20 @@ TwoAxesLineChart.prototype.drawOyLabels = function(oyLabels) {
         y + OY_LABELS_MARGIN_TOP
       );
     }
-
-    this.ctx.beginPath();
-    this.ctx.globalAlpha = 1;
-    this.ctx.lineWidth = 1;
-    this.ctx.strokeStyle = this.gridLinesColor;
-    for (var i = 1; i < 6; i++) {
-      var y = (oyLabels.labels.length - i) * this.gridLinesHeight;
-
-      y -= 0.5;
-      this.ctx.moveTo(CHART_GRID_PADDING, y);
-      this.ctx.lineTo(this.w - CHART_GRID_PADDING, y);
-    }
-    this.ctx.stroke();
   }
+
+  this.ctx.beginPath();
+  this.ctx.globalAlpha = 1;
+  this.ctx.lineWidth = 1;
+  this.ctx.strokeStyle = this.gridLinesColor;
+  for (var i = 1; i < 6; i++) {
+    var y = (oyLabels.labels.length - i) * this.gridLinesHeight;
+
+    y -= 0.5;
+    this.ctx.moveTo(CHART_GRID_PADDING, y);
+    this.ctx.lineTo(this.w - CHART_GRID_PADDING, y);
+  }
+  this.ctx.stroke();
 
   if (oyLabels.alphaRight.value > 0) {
     this.ctx.fillStyle = this.columns[1].color;
@@ -140,8 +157,8 @@ TwoAxesLineChart.prototype.checkRedrawBg = function(now) {
 }
 
 TwoAxesLineChart.prototype.updateY = function () {
-  var maxY = getMax(this.columns[0].values.slice(this.startInd, this.endInd+1));
-  var maxYRight = getMax(this.columns[1].values.slice(this.startInd, this.endInd+1));
+  var maxY = (this.columns[0].isOn) ? getMax(this.columns[0].values.slice(this.startInd, this.endInd+1)) : 0;
+  var maxYRight = (this.columns[1].isOn) ? getMax(this.columns[1].values.slice(this.startInd, this.endInd+1)) : 0;
   var newGridStepY = getStepForGridValues(maxY);
   var newGridStepYRight = getStepForGridValues(maxYRight);
 
@@ -166,7 +183,7 @@ TwoAxesLineChart.prototype.updateY = function () {
     this.newOyLabels.alpha.set(1, now, true);
 
     this.oldOyLabels.labels = this.newOyLabels.labels;
-    this.newOyLabels.labels = [0, 1, 2, 3, 4, 5].map(n => n*newGridStepY);
+    this.newOyLabels.labels = (maxY !== 0) ? [0, 1, 2, 3, 4, 5].map(n => n*newGridStepY) : 0;
   }
 
   if (this.gridStepYRight !== newGridStepYRight) {
@@ -181,7 +198,7 @@ TwoAxesLineChart.prototype.updateY = function () {
     this.newOyLabels.alphaRight.set(1, now, true);
 
     this.oldOyLabels.labelsRight = this.newOyLabels.labelsRight;
-    this.newOyLabels.labelsRight = [0, 1, 2, 3, 4, 5].map(n => n*newGridStepYRight);
+    this.newOyLabels.labelsRight = (maxYRight !== 0) ? [0, 1, 2, 3, 4, 5].map(n => n*newGridStepYRight) : [0];
   }
 }
 

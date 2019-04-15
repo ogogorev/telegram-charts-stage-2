@@ -105,6 +105,11 @@ ChartBase.prototype.initCanvas = function () {
   this.canvas.onmouseenter = this.onMouseEnter.bind(this);
   this.chartContainer.append(this.canvas);
   this.ctx = this.canvas.getContext('2d');
+
+  // var scale = window.devicePixelRatio;
+  // console.log('scale', scale);
+  // this.canvas.width = this.w * scale;
+  // this.canvas.height = this.h * scale;
 }
 
 ChartBase.prototype.initPreviewUI = function () {
@@ -225,6 +230,8 @@ ChartBase.prototype.init = function() {
 ChartBase.prototype.initDrawProps = function() {
   this.initColors(CHART_DAY_THEME);
 
+  this.drawIndOffset = 10;
+
   this.bottomY = this.h - OXLABELS_HEIGHT - PREVIEW_CHART_HEIGHT - PREVIEW_CHART_MARGIN; // FIXME rename to mainChartY
   this.oxLabelsBottomY = this.h - PREVIEW_CHART_HEIGHT - PREVIEW_CHART_MARGIN; // FIXME rename to oxLabelsY
 
@@ -287,16 +294,6 @@ ChartBase.prototype.initInfo = function() {
   this.chartContainer.append(this.info);
 }
 
-// ChartBase.prototype.onCanvasClick = function(e) {
-//   if (e.layerY <= this.bottomY) {
-//     select(e.layerX)
-//   }
-//   else {
-//     this.selectedInd = -1;
-//   }
-//   this.draw();
-// };
-
 ChartBase.prototype.select = function(x, y) {
   this.selectedScreenX = x;
   this.selectedScreenY = y;
@@ -315,7 +312,7 @@ ChartBase.prototype.updateRange = function(left, right) {
 
 ChartBase.prototype.drawBg = function() {
   this.drawOxLabels(this.staticOxLabels, this.oxLabels.length - 1);
-  this.drawOxLabels(this.dynamicOxLabels, this.oxLabels.length - 1 - this.dynamicOxLabels.step/2); // Говно какое-то
+  this.drawOxLabels(this.dynamicOxLabels, this.oxLabels.length - 1 - Math.floor(this.dynamicOxLabels.step/2)); // Говно какое-то
   this.drawOyLabels(this.oldOyLabels);
   this.drawOyLabels(this.newOyLabels);
   this.drawZeroLine();
@@ -352,21 +349,19 @@ ChartBase.prototype.drawOxLabels = function(oxLabelsProps, lastInd) {
 }
 
 ChartBase.prototype.updateOxLabels = function() {
-
-
   var step = Math.max(1, (this.endInd - this.startInd + 1) / this.countOnScreen); // FIXME если range не изменился, то и сюда не надо
   var p = 1;
   while (step > p) p *= 2;
   step = p;
 
+
+  // if (this.name === 'Stacked bar chart') {
+  //   console.log('update ox', this.name);
+  //   console.log('step', step);
+  //   console.log('curr step', this.currOxLabelsStep);
+  // }
+
   if (step === this.currOxLabelsStep) return false;
-
-  if (this.name === 'stacked bar') {
-    console.log('update ox', this.name);
-    console.log('step', step);
-    console.log('curr step', this.currOxLabelsStep);
-  }
-
 
 
   var now = performance.now();
@@ -453,13 +448,24 @@ ChartBase.prototype.buttonClicked = function() {}
 ChartBase.prototype.draw = function() {
   requestAnimationFrame(function() {
 
+    // this.startInd = Math.max(Math.ceil(this.previewUILeftX * this.L) - 1, 0);
+    // this.endInd = Math.ceil(this.previewUIRightX * this.L);
+    // this.barWidth = this.gridWidth/(this.L*(this.previewUIRightX-this.previewUILeftX));
+    // this.offsetX = calculateOffsetX(this.gridWidth, CHART_GRID_PADDING, this.previewUILeftX, this.previewUIRightX);
+
+    // this.updateDateRange();
+    // this.calculateOxLabelsOffsetX();
+    // this.updateY();
+
+    // ==========================
+
     // this.ctx.clearRect(0, 0, this.w, this.oxLabelsBottomY);
     this.ctx.clearRect(0, 0, this.w, this.previewChartY);
 
-    // this.ctx.beginPath();
-    // this.ctx.strokeStyle = '#000000'
-    // this.ctx.rect(0, 0, this.w, this.bottomY);
-    // this.ctx.stroke()
+    this.ctx.beginPath();
+    this.ctx.strokeStyle = '#000000'
+    this.ctx.rect(0, 0, this.w, this.bottomY);
+    this.ctx.stroke()
 
     if (this.updateOxLabels()) this.needRedraw = true;
 
@@ -562,17 +568,13 @@ ChartBase.prototype.updateY = function () {
 };
 
 ChartBase.prototype.update = function() {
-  // startInd = Math.floor(me.previewUILeftX * L);
   this.startInd = Math.max(Math.ceil(this.previewUILeftX * this.L) - 1, 0);
   this.endInd = Math.ceil(this.previewUIRightX * this.L);
   this.barWidth = this.gridWidth/(this.L*(this.previewUIRightX-this.previewUILeftX));
   this.offsetX = calculateOffsetX(this.gridWidth, CHART_GRID_PADDING, this.previewUILeftX, this.previewUIRightX);
 
   this.updateDateRange();
-
   this.calculateOxLabelsOffsetX();
-  // this.updateOxLabels();
-
   this.updateY();
 
   this.draw();

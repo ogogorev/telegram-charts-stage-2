@@ -69,7 +69,7 @@ StackedBarChart.prototype.onResize = debounce(function(e) {
 }, 20);
 
 StackedBarChart.prototype.initData = function() {
-  ChartBase.prototype.initData.call(this);
+  ChartBase.prototype.initData.call(this, 10);
 
   this.stackedColumns = this.columns.map(c => c.values.map(
     v => 0
@@ -80,6 +80,16 @@ StackedBarChart.prototype.initData = function() {
   ));
 
   this.updateStackedColumns();
+}
+
+StackedBarChart.prototype.initInfo = function() {
+  ChartBase.prototype.initInfo.apply(this);
+  // this.info = createInfo();
+  // for (var i = 0; i < this.columns.length; i++) {
+  //   this.info.addRow(this.columns[i].name, 0, this.columns[i].color);
+  // }
+  // this.chartContainer.append(this.info);
+  this.info.addRow('All', 0, '#000000');
 }
 
 StackedBarChart.prototype.updateStackedColumns = function() {
@@ -120,6 +130,14 @@ StackedBarChart.prototype.buttonClicked = function(name, isOn) {
       if (isOn) this.info.enableRow(this.columns[i].name);
       else this.info.disableRow(this.columns[i].name);
       this.updateStackedColumns();
+
+      if (this.columns.filter(c => c.isOn).length < 1) {
+        this.info.disableRow('All')
+      }
+      else {
+        this.info.enableRow('All')
+      }
+
       this.gridPreviewMaxY.set(Math.max(this.calculateGridPreviewMaxY(), 0), now, true);
       this.update();
     }
@@ -146,8 +164,8 @@ StackedBarChart.prototype.checkRedrawChartsContent = function(now) {
 
 StackedBarChart.prototype.drawChartContent = function() {
   var barW = Math.round(this.barWidth*this.round)/this.round;
-  var sI = Math.max(this.startInd-1, 0);
-  var eI = Math.min(this.endInd+1, this.L);
+  var sI = Math.max(this.startInd - this.drawIndOffset, 0);
+  var eI = Math.min(this.endInd + this.drawIndOffset, this.L);
 
   var X = [];
   for (var i = sI; i < eI+1; i++) {
@@ -177,6 +195,17 @@ StackedBarChart.prototype.drawChartContent = function() {
     this.drawSelectedChartContent();
   }
 
+}
+
+StackedBarChart.prototype.select = function(x, y) {
+  this.selectedScreenX = x;
+  this.selectedScreenY = y;
+  this.selectedInd = this.getIndByScreenX(x);
+  this.info.setTitle(createLabelFromDate(this.dateColumn[this.selectedInd], true));
+  this.columns.filter(c => c.isOn).forEach(c => {
+    this.info.setRowValue(c.name, c.values[this.selectedInd]);
+    this.info.setRowValue('All', this.stackedColumns[this.stackedColumns.length-1][this.selectedInd]);
+  });
 }
 
 StackedBarChart.prototype.drawSelectedChartContent = function () {

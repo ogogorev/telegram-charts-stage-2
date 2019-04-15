@@ -99,8 +99,11 @@ LineChart.prototype.checkRedrawChartsContent = function(now) {
 
 LineChart.prototype.drawChartContent = function() {
   var barW = Math.round(this.barWidth*this.round)/this.round;
-  var sI = Math.max(this.startInd-1, 0);
-  var eI = Math.min(this.endInd+1, this.L);
+  var sI = Math.max(this.startInd - this.drawIndOffset, 0);
+  var eI = Math.min(this.endInd + this.drawIndOffset, this.L);
+
+  // var sI = Math.max(this.startInd - 1, 0);
+  // var eI = Math.min(this.endInd + 1, this.L);
 
   var X = [];
   for (var i = sI; i < eI+1; i++) {
@@ -176,7 +179,7 @@ LineChart.prototype.drawSelectedChartContent = function() {
     filteredColumns.forEach(c => {
       this.ctx.beginPath();
       this.ctx.lineWidth = 2;
-      this.ctx.strokeStyle = this.data.colors[c.id]; // FIXME Color
+      this.ctx.strokeStyle = this.data.colors[c.id];
       this.ctx.arc(
         selectedIndX,
         Math.floor(getScreenY(this.bottomY, c.values[this.selectedInd], this.getGridMaxForColumn(c))),
@@ -187,14 +190,6 @@ LineChart.prototype.drawSelectedChartContent = function() {
       this.ctx.stroke();
       this.ctx.closePath();
     });
-
-    // this.info.style.left = Math.max(this.selectedScreenX - this.info.offsetWidth - 30, 0) + 'px'; // FIXME this.info margin
-    // this.info.style.top = Math.max(this.selectedScreenY - this.info.offsetHeight, 0) + 'px';
-    // this.info.appear();
-  // }
-  // else {
-  //   this.info.disappear()
-  // }
 }
 
 LineChart.prototype.getGridMaxForColumnPreview = function(column) {
@@ -208,8 +203,8 @@ LineChart.prototype.drawPreview = function() {
   for (var i = 0; i < this.oxLabels.length; i++) {
     X.push(getScreenXByInd(i, this.previewChartStep, this.previewChartX));
   }
-  X[0] = Math.ceil(X[0]);
-  X[X.length-1] = Math.floor(X[X.length-1]);
+  X[0] += 1
+  X[X.length-1] -= 1;
 
   this.ctx.beginPath();
   for (var i = 0; i < this.columns.length; i++) {

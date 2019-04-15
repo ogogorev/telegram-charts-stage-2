@@ -64,7 +64,7 @@ BarChart.prototype.onResize = debounce(function(e) {
 }, 20);
 
 BarChart.prototype.initData = function() {
-  ChartBase.prototype.initData.call(this);
+  ChartBase.prototype.initData.call(this, 150);
 }
 
 BarChart.prototype.calculateOxLabelsOffsetX = function () {
@@ -108,8 +108,8 @@ BarChart.prototype.drawChartContent = function() {
   this.ctx.beginPath();
   this.ctx.globalAlpha = (this.selectedInd > -1) ? 0.6 : 1; // FIXME Alpha to const
   var barW = Math.round(this.barWidth*this.round)/this.round;
-  var sI = Math.max(this.startInd-1, 0);
-  var eI = Math.min(this.endInd+1, this.L);
+  var sI = Math.max(this.startInd - this.drawIndOffset, 0);
+  var eI = Math.min(this.endInd + this.drawIndOffset, this.L);
 
   var X = [];
   for (var i = sI; i < eI+1; i++) {
