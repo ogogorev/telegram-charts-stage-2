@@ -33,11 +33,11 @@ LineChart.prototype.initData = function() {
 LineChart.prototype.initOyProps = function() {
   ChartBase.prototype.initOyProps.apply(this);
 
-  this.gridMiniMaxY = new AnimatedValue(0, Y_ANIMATION_TIME);
-  this.gridMiniMaxY.set(this.calculateGridMiniMaxY(), performance.now(), true);
+  this.gridPreviewMaxY = new AnimatedValue(0, Y_ANIMATION_TIME);
+  this.gridPreviewMaxY.set(this.calculateGridPreviewMaxY(), performance.now(), true);
 }
 
-LineChart.prototype.calculateGridMiniMaxY = function () {
+LineChart.prototype.calculateGridPreviewMaxY = function () {
   return getMatrixMax(this.columns.filter(c => c.isOn).map(c => c.values));
 }
 
@@ -49,7 +49,7 @@ LineChart.prototype.buttonClicked = function(name, isOn) {
       else this.columns[i].alpha.set(0, now, true)
       this.columns[i].isOn = isOn;
 
-      this.gridMiniMaxY.set(Math.max(this.calculateGridMiniMaxY(), 0), now, true);
+      this.gridPreviewMaxY.set(Math.max(this.calculateGridPreviewMaxY(), 0), now, true);
 
       this.update();
     }
@@ -59,7 +59,7 @@ LineChart.prototype.buttonClicked = function(name, isOn) {
 LineChart.prototype.checkRedrawChartsContent = function(now) {
   ChartBase.prototype.checkRedrawChartsContent.call(this, now);
 
-  if (this.gridMiniMaxY.nextTick(now)) this.needDrawMini = true;
+  if (this.gridPreviewMaxY.nextTick(now)) this.needDrawPreview = true;
 }
 
 LineChart.prototype.drawChartContent = function() {
@@ -159,25 +159,25 @@ LineChart.prototype.drawSelected = function() {
   }
 }
 
-LineChart.prototype.getGridMaxForColumnMini = function(column) {
-  return this.gridMiniMaxY.value;
+LineChart.prototype.getGridMaxForColumnPreview = function(column) {
+  return this.gridPreviewMaxY.value;
 };
 
-LineChart.prototype.drawMini = function() {
-  this.clearDrawMini();
+LineChart.prototype.drawPreview = function() {
+  this.clearDrawPreview();
 
   var X = [];
   for (var i = 0; i < this.oxLabels.length; i++) {
-    X.push(getScreenXByInd(i, this.miniChartStep, this.miniChartX));
+    X.push(getScreenXByInd(i, this.previewChartStep, this.previewChartX));
   }
   X[0] = Math.ceil(X[0]);
   X[X.length-1] = Math.floor(X[X.length-1]);
 
   this.ctx.beginPath();
   for (var i = 0; i < this.columns.length; i++) {
-    var Y = getYCoords(this.miniChartHeight, this.columns[i].values, this.getGridMaxForColumnMini(this.columns[i]))
-    // .map(y => this.miniChartY + y);
-    .map(y => Math.max(this.miniChartY + y, this.miniChartY));
+    var Y = getYCoords(this.previewChartHeight, this.columns[i].values, this.getGridMaxForColumnPreview(this.columns[i]))
+    // .map(y => this.previewChartY + y);
+    .map(y => Math.max(this.previewChartY + y, this.previewChartY));
 
     this.drawLine(X, Y, this.columns[i].color, this.columns[i].alpha.value);
   }

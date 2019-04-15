@@ -1,13 +1,10 @@
-import { barChart } from './bar-chart';
 import { preview } from './preview-ui';
 import { createInfo } from './point-info';
 import { createButton } from './button';
 import { AnimatedValue } from '../animations';
 import {
   createLabelFromDate,
-  getMin, getMax,
   getMatrixMax,
-  debounce, getGridValuesByMax,
   getStepForGridValues,
   getDataColumnByName
 } from '../utils';
@@ -18,8 +15,8 @@ const Y_ANIMATION_TIME = .3;
 const OX_LABELS_ANIMATION_DURATION = 0.25;
 const OY_LABELS_MARGIN_TOP = -10;
 
-const MINI_CHART_HEIGHT = 50;
-const MINI_CHART_MARGIN = 30;
+const PREVIEW_CHART_HEIGHT = 50;
+const PREVIEW_CHART_MARGIN = 30;
 
 export function ChartBase(w, h, data) {
   this.w = w;
@@ -27,28 +24,27 @@ export function ChartBase(w, h, data) {
   this.container = document.createElement('div');
   // me.container.id = 'chart container';
   this.container.style.width = w + 'px';
-  this.container.style.height = h + 'px';
+  // this.container.style.height = h + 'px';
   this.container.style.position = 'relative';
 
   this.canvas = document.createElement('canvas');
   this.canvas.width = w;
   this.canvas.height = h;
-  // this.canvas.onclick = this.onCanvasClick.bind(this);
   this.canvas.onmouseenter = this.onMouseEnter.bind(this);
   this.container.append(this.canvas);
   this.ctx = this.canvas.getContext('2d');
 
-  this.preview = preview(this.w - CHART_GRID_PADDING*2, PREVIEW_HEIGHT);
-  this.preview.style.position = 'absolute';
-  this.preview.style.bottom = -PREVIEW_INNER_MARGIN_TOP + 'px';
-  this.preview.style.left = CHART_GRID_PADDING + 'px';
-  this.container.append(this.preview);
-  this.preview.onupdate = function(state) {
+  this.previewUI = preview(this.w - CHART_GRID_PADDING*2, PREVIEW_HEIGHT);
+  this.previewUI.style.position = 'absolute';
+  this.previewUI.style.top = h - PREVIEW_CHART_HEIGHT - PREVIEW_INNER_MARGIN_TOP + 'px';
+  this.previewUI.style.left = CHART_GRID_PADDING + 'px';
+  this.container.append(this.previewUI);
+  this.previewUI.onupdate = function(state) {
     this.updateRange(state.left, state.right);
   }.bind(this);
 
-  this.previewLeftX = 0.8;
-  this.previewRightX = 1;
+  this.previewUILeftX = 0.8;
+  this.previewUIRightX = 1;
 
   this.data = data;
 
@@ -80,20 +76,20 @@ ChartBase.prototype.init = function() {
   this.initDrawProps();
   this.initOxProps();
   this.initOyProps();
-  this.initMiniChartProps();
+  this.initPreviewChartProps();
 
-  // this.drawMini();
+  // this.drawpreview();
   this.initInfo();
   this.initButtons();
   this.update();
 }
 
 ChartBase.prototype.initDrawProps = function() {
-  this.bottomY = this.h - OXLABELS_HEIGHT - MINI_CHART_HEIGHT - MINI_CHART_MARGIN; // FIXME rename to mainChartY
-  this.oxLabelsBottomY = this.h - MINI_CHART_HEIGHT - MINI_CHART_MARGIN; // FIXME rename to oxLabelsY
+  this.bottomY = this.h - OXLABELS_HEIGHT - PREVIEW_CHART_HEIGHT - PREVIEW_CHART_MARGIN; // FIXME rename to mainChartY
+  this.oxLabelsBottomY = this.h - PREVIEW_CHART_HEIGHT - PREVIEW_CHART_MARGIN; // FIXME rename to oxLabelsY
 
   this.needRedraw = false;
-  this.needDrawMini = true;
+  this.needDrawPreview = true;
 
   this.gridWidth = this.w - CHART_GRID_PADDING*2;
 
@@ -135,12 +131,12 @@ ChartBase.prototype.initOyProps = function() {
   };
 }
 
-ChartBase.prototype.initMiniChartProps = function(dataLength=this.L) {
-  this.miniChartX = CHART_GRID_PADDING;
-  this.miniChartY = this.h - MINI_CHART_HEIGHT + 1;
-  this.miniChartWidth = this.w - CHART_GRID_PADDING*2;
-  this.miniChartHeight = MINI_CHART_HEIGHT;
-  this.miniChartStep = Math.round((this.miniChartWidth/(dataLength))*this.round)/this.round;
+ChartBase.prototype.initPreviewChartProps = function(dataLength=this.L) {
+  this.previewChartX = CHART_GRID_PADDING;
+  this.previewChartY = this.h - PREVIEW_CHART_HEIGHT + 1;
+  this.previewChartWidth = this.w - CHART_GRID_PADDING*2;
+  this.previewChartHeight = PREVIEW_CHART_HEIGHT;
+  this.previewChartStep = Math.round((this.previewChartWidth/(dataLength))*this.round)/this.round;
 }
 
 ChartBase.prototype.initInfo = function() {
@@ -172,8 +168,8 @@ ChartBase.prototype.select = function(x, y) {
 }
 
 ChartBase.prototype.updateRange = function(left, right) {
-  this.previewLeftX = left;
-  this.previewRightX = right;
+  this.previewUILeftX = left;
+  this.previewUIRightX = right;
   this.update();
 }
 
@@ -296,7 +292,7 @@ ChartBase.prototype.buttonClicked = function() {}
 ChartBase.prototype.draw = function() {
   requestAnimationFrame(function() {
     // this.ctx.clearRect(0, 0, this.w, this.oxLabelsBottomY);
-    this.ctx.clearRect(0, 0, this.w, this.miniChartY);
+    this.ctx.clearRect(0, 0, this.w, this.previewChartY);
 
     this.ctx.beginPath();
     this.ctx.rect(0, 0, this.w, this.bottomY);
@@ -309,9 +305,9 @@ ChartBase.prototype.draw = function() {
 
     this.drawSequence();
 
-    if (this.needDrawMini) {
-      this.needDrawMini = false;
-      this.drawMini();
+    if (this.needDrawPreview) {
+      this.needDrawPreview = false;
+      this.drawPreview();
     }
 
     if (this.needRedraw) {
@@ -338,15 +334,15 @@ ChartBase.prototype.checkRedrawBg = function(now) {
 ChartBase.prototype.checkRedrawChartsContent = function(now) {
   for (var i = 0; i < this.columns.length; i++) {
     if (this.columns[i].alpha.nextTick(now)) {
-      this.needRedraw = this.needDrawMini = true;
+      this.needRedraw = this.needDrawPreview = true;
     }
   }
 }
 
 ChartBase.prototype.drawChartContent = function() {}
 
-ChartBase.prototype.clearDrawMini = function() {
-  this.ctx.clearRect(this.miniChartX-2, this.miniChartY, this.miniChartWidth+4, this.miniChartY);
+ChartBase.prototype.clearDrawPreview = function() {
+  this.ctx.clearRect(this.previewChartX-2, this.previewChartY, this.previewChartWidth+4, this.previewChartY);
 }
 
 ChartBase.prototype.calculateValuesMaxY = function() {
@@ -383,11 +379,11 @@ ChartBase.prototype.updateY = function () {
 };
 
 ChartBase.prototype.update = function() {
-  // startInd = Math.floor(me.previewLeftX * L);
-  this.startInd = Math.max(Math.ceil(this.previewLeftX * this.L) - 1, 0);
-  this.endInd = Math.ceil(this.previewRightX * this.L);
-  this.barWidth = this.gridWidth/(this.L*(this.previewRightX-this.previewLeftX));
-  this.offsetX = calculateOffsetX(this.gridWidth, CHART_GRID_PADDING, this.previewLeftX, this.previewRightX);
+  // startInd = Math.floor(me.previewUILeftX * L);
+  this.startInd = Math.max(Math.ceil(this.previewUILeftX * this.L) - 1, 0);
+  this.endInd = Math.ceil(this.previewUIRightX * this.L);
+  this.barWidth = this.gridWidth/(this.L*(this.previewUIRightX-this.previewUILeftX));
+  this.offsetX = calculateOffsetX(this.gridWidth, CHART_GRID_PADDING, this.previewUILeftX, this.previewUIRightX);
 
   this.calculateOxLabelsOffsetX();
   this.updateOxLabels();

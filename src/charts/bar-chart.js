@@ -12,8 +12,8 @@ const Y_ANIMATION_TIME = 0.3;
 const OX_LABELS_ANIMATION_DURATION = 0.25;
 const OY_LABELS_MARGIN_TOP = -10;
 
-const MINI_CHART_HEIGHT = 50;
-const MINI_CHART_MARGIN = 30;
+const PREVIEW_CHART_HEIGHT = 50;
+const PREVIEW_CHART_MARGIN = 30;
 
 
 export function barChart(w, h, data) {
@@ -44,8 +44,8 @@ ChartBase.prototype.calculateValuesMaxY = function() {
   return getMax(this.columns[0].values.slice(Math.max(0, this.startInd-1), this.endInd+1));
 }
 
-BarChart.prototype.drawMini = function() {
-  this.ctx.clearRect(this.miniChartX, this.miniChartY, this.miniChartWidth, this.miniChartHeight);
+BarChart.prototype.drawPreview = function() {
+  this.ctx.clearRect(this.previewChartX, this.previewChartY, this.previewChartWidth, this.previewChartHeight);
 
   this.ctx.beginPath();
   this.ctx.globalAlpha = 0.4; // FIXME Alpha to const
@@ -53,10 +53,10 @@ BarChart.prototype.drawMini = function() {
 
   var X = [];
   for (var i = 0; i < this.oxLabels.length; i++) {
-    X.push(getScreenXByInd(i, this.miniChartStep, this.miniChartX));
+    X.push(getScreenXByInd(i, this.previewChartStep, this.previewChartX));
   }
   var max = getMax(this.columns[0].values);
-  var Y = getYCoords(this.miniChartHeight, this.columns[0].values, max).map(y => this.miniChartY + y);
+  var Y = getYCoords(this.previewChartHeight, this.columns[0].values, max).map(y => this.previewChartY + y);
 
   var barWidth = X[1] - X[0];
   for (var i = 0; i < X.length; i++) {
@@ -173,7 +173,7 @@ export function barChart1(w, h, data) {
   me.container.append(info);
 
   function init() {
-    drawMini(CHART_GRID_PADDING, h - MINI_CHART_HEIGHT, w - CHART_GRID_PADDING*2, MINI_CHART_HEIGHT);
+    drawPreview(CHART_GRID_PADDING, h - PREVIEW_CHART_HEIGHT, w - CHART_GRID_PADDING*2, PREVIEW_CHART_HEIGHT);
     me.update();
   }
 

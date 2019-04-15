@@ -14,8 +14,8 @@ const Y_ANIMATION_TIME = 0.3;
 const OX_LABELS_ANIMATION_DURATION = 0.25;
 const OY_LABELS_MARGIN_TOP = -10;
 
-const MINI_CHART_HEIGHT = 50;
-const MINI_CHART_MARGIN = 30;
+const PREVIEW_CHART_HEIGHT = 50;
+const PREVIEW_CHART_MARGIN = 30;
 
 
 
@@ -77,11 +77,11 @@ StackedBarChart.prototype.updateStackedColumns = function() {
 StackedBarChart.prototype.initOyProps = function() {
   ChartBase.prototype.initOyProps.apply(this);
 
-  this.gridMiniMaxY = new AnimatedValue(0, Y_ANIMATION_TIME);
-  this.gridMiniMaxY.set(this.calculateGridMiniMaxY(), performance.now(), true);
+  this.gridPreviewMaxY = new AnimatedValue(0, Y_ANIMATION_TIME);
+  this.gridPreviewMaxY.set(this.calculateGridPreviewMaxY(), performance.now(), true);
 }
 
-StackedBarChart.prototype.calculateGridMiniMaxY = function () {
+StackedBarChart.prototype.calculateGridPreviewMaxY = function () {
   var arr = this.stackedColumns[this.stackedColumns.length-1];
   return getMax(arr);
 };
@@ -94,7 +94,7 @@ StackedBarChart.prototype.buttonClicked = function(name, isOn) {
     if (this.columns[i].name === name) {
       this.columns[i].isOn = isOn;
       this.updateStackedColumns();
-      this.gridMiniMaxY.set(Math.max(this.calculateGridMiniMaxY(), 0), now, true);
+      this.gridPreviewMaxY.set(Math.max(this.calculateGridPreviewMaxY(), 0), now, true);
       this.update();
     }
   }
@@ -111,11 +111,11 @@ StackedBarChart.prototype.checkRedrawChartsContent = function(now) {
   for (var i = 0; i < this.stackedColumnsAnimated.length; i++) {
     for (var j = 0; j < this.stackedColumnsAnimated[i].length; j++) {
       if (this.stackedColumnsAnimated[i][j].nextTick(now)) {
-        this.needRedraw = this.needDrawMini = true;
+        this.needRedraw = this.needDrawPreview = true;
       }
     }
   }
-  if (this.gridMiniMaxY.nextTick(now)) this.needDrawMini = true;
+  if (this.gridPreviewMaxY.nextTick(now)) this.needDrawPreview = true;
 }
 
 StackedBarChart.prototype.drawChartContent = function() {
@@ -148,17 +148,17 @@ StackedBarChart.prototype.drawChartContent = function() {
   }
 }
 
-StackedBarChart.prototype.drawMini = function() {
-  this.clearDrawMini();
+StackedBarChart.prototype.drawPreview = function() {
+  this.clearDrawPreview();
 
   var X = [];
   for (var i = 0; i < this.oxLabels.length; i++) {
-    X.push(getScreenXByInd(i, this.miniChartStep, this.miniChartX));
+    X.push(getScreenXByInd(i, this.previewChartStep, this.previewChartX));
   }
   var barWidth = X[1] - X[0];
 
   var YCoords = this.stackedColumnsAnimated.map(
-    c => getYCoords(this.miniChartHeight, c.map(v => v.value), this.gridMiniMaxY.value).map(y => this.miniChartY + y)
+    c => getYCoords(this.previewChartHeight, c.map(v => v.value), this.gridPreviewMaxY.value).map(y => this.previewChartY + y)
   );
   YCoords.splice(0, 0, YCoords[1].map(c => this.h));
 

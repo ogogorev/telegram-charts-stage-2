@@ -33,8 +33,8 @@ TwoAxesLineChart.prototype.initOyProps = function() {
 
   this.gridStepYRight = 0;
   this.gridMaxYRight = new AnimatedValue(0, Y_ANIMATION_TIME);
-  this.gridMiniMaxYRight = new AnimatedValue(0, Y_ANIMATION_TIME);
-  this.gridMiniMaxYRight.set(getMax(this.columns[1].values), performance.now(), true);
+  this.gridPreviewMaxYRight = new AnimatedValue(0, Y_ANIMATION_TIME);
+  this.gridPreviewMaxYRight.set(getMax(this.columns[1].values), performance.now(), true);
 
   this.oldOyLabels.alphaRight = new AnimatedValue(0, Y_ANIMATION_TIME);
   this.oldOyLabels.labelsRight = [0, 1, 2, 3, 4, 5, 6];
@@ -46,7 +46,7 @@ TwoAxesLineChart.prototype.initOyProps = function() {
 TwoAxesLineChart.prototype.checkRedrawChartsContent = function(now) {
   LineChart.prototype.checkRedrawChartsContent.call(this, now);
 
-  if (this.gridMiniMaxYRight.nextTick(now)) this.needDrawMini = true;
+  if (this.gridPreviewMaxYRight.nextTick(now)) this.needDrawPreview = true;
 }
 
 TwoAxesLineChart.prototype.drawOyLabels = function(oyLabels) {
@@ -159,6 +159,6 @@ TwoAxesLineChart.prototype.getGridMaxForColumn = function(column) {
   return (this.columns[0].id === column.id) ? this.gridMaxY.value : this.gridMaxYRight.value;
 }
 
-TwoAxesLineChart.prototype.getGridMaxForColumnMini = function(column) {
-  return (this.columns[0].id === column.id) ? this.gridMiniMaxY.value : this.gridMiniMaxYRight.value;
+TwoAxesLineChart.prototype.getGridMaxForColumnPreview = function(column) {
+  return (this.columns[0].id === column.id) ? this.gridPreviewMaxY.value : this.gridPreviewMaxYRight.value;
 }

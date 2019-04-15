@@ -131,7 +131,7 @@ PercentageStackedAreaChart.prototype.checkRedrawChartsContent = function(now) {
   for (var i = 0; i < this.percents.length; i++) {
     for (var j = 0; j < this.percents[i].length; j++) {
       if (this.percents[i][j].nextTick(now)) {
-        this.needRedraw = this.needDrawMini = true;
+        this.needRedraw = this.needDrawPreview = true;
       }
     }
   }
@@ -146,7 +146,7 @@ PercentageStackedAreaChart.prototype.buttonClicked = function(name, isOn) {
       this.columns[i].isOn = isOn;
       this.updatePercents();
 
-      // this.gridMiniMaxY.set(Math.max(this.calculateGridMiniMaxY(), 0), now, true);
+      // this.gridPreviewMaxY.set(Math.max(this.calculateGridPreviewMaxY(), 0), now, true);
 
       this.update();
     }
@@ -193,12 +193,12 @@ PercentageStackedAreaChart.prototype.drawArea = function (X, Y, color, alpha=1) 
   // }
 }
 
-PercentageStackedAreaChart.prototype.drawMini = function() {
-  this.clearDrawMini();
+PercentageStackedAreaChart.prototype.drawPreview = function() {
+  this.clearDrawPreview();
 
   var X = [];
   for (var i = 0; i < this.oxLabels.length; i++) {
-    X.push(getScreenXByInd(i, this.miniChartStep, this.miniChartX));
+    X.push(getScreenXByInd(i, this.previewChartStep, this.previewChartX));
   }
   X[0] = Math.ceil(X[0]);
   X[X.length-1] = Math.floor(X[X.length-1]);
@@ -208,9 +208,9 @@ PercentageStackedAreaChart.prototype.drawMini = function() {
 
   for (var i = this.columns.length - 1; i >= 0 ; i--) {
     var values = this.percents.map(p => p[i]);
-    var Y = values.map(v => getScreenY(this.miniChartHeight, v.value, 100));
-    var m = getScreenY(this.miniChartHeight, (mins[i-1]) ? mins[i-1] : 0, 100);
-    Y = Y.concat(m, m).map(y => Math.max(this.miniChartY + y, this.miniChartY));
+    var Y = values.map(v => getScreenY(this.previewChartHeight, v.value, 100));
+    var m = getScreenY(this.previewChartHeight, (mins[i-1]) ? mins[i-1] : 0, 100);
+    Y = Y.concat(m, m).map(y => Math.max(this.previewChartY + y, this.previewChartY));
 
     this.drawArea(X, Y, this.columns[i].color);
   }
@@ -262,11 +262,11 @@ PercentageStackedAreaChart.prototype.drawSelected = function() {
 // PercentageStackedAreaChart.prototype.initOyProps = function() {
 //   ChartBase.prototype.initOyProps.apply(this);
 //
-//   this.gridMiniMaxY = new AnimatedValue(0, Y_ANIMATION_TIME);
-//   this.gridMiniMaxY.set(this.calculateGridMiniMaxY(), performance.now(), true);
+//   this.gridPreviewMaxY = new AnimatedValue(0, Y_ANIMATION_TIME);
+//   this.gridPreviewMaxY.set(this.calculateGridPreviewMaxY(), performance.now(), true);
 // }
 
-// PercentageStackedAreaChart.prototype.calculateGridMiniMaxY = function () {
+// PercentageStackedAreaChart.prototype.calculateGridPreviewMaxY = function () {
 //   return getMatrixMax(this.columns.filter(c => c.isOn).map(c => c.values));
 // }
 
@@ -290,6 +290,6 @@ PercentageStackedAreaChart.prototype.drawSelected = function() {
 //   }
 // }
 
-// PercentageStackedAreaChart.prototype.getGridMaxForColumnMini = function(column) {
-//   return this.gridMiniMaxY.value;
+// PercentageStackedAreaChart.prototype.getGridMaxForColumnPreview = function(column) {
+//   return this.gridPreviewMaxY.value;
 // };
