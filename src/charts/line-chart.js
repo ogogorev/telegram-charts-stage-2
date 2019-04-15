@@ -1,16 +1,12 @@
 import { ChartBase, getScreenXByInd, getYCoords, getScreenY } from './chart';
-import { AnimatedValue, AnimatedArray, main } from '../animations';
+import { AnimatedValue } from '../animations';
 import {
-  createLabelFromDate,
-  getMin, getMax,
+  getMax,
   getMatrixMax,
-  debounce, getGridValuesByMax,
-  getStepForGridValues,
-  getDataColumnByName
+  debounce
 } from '../utils';
 import {
   CHART_GRID_PADDING,
-  GRID_LINES_COLOR,
   CHART_HEADER_HEIGHT,
   CHART_HEADER_MARGIN_BOTTOM,
   CHART_MAX_WIDTH,
@@ -18,8 +14,6 @@ import {
   CHART_MAX_HEIGHT,
   Y_ANIMATION_TIME
 } from '../consts';
-
-// const LINE_CHART_
 
 export function lineChart(container, data, name) {
   var chart = new LineChart(container, data, name);
@@ -62,7 +56,7 @@ LineChart.prototype.onResize = debounce(function(e) {
 }, 20);
 
 LineChart.prototype.initData = function() {
-  ChartBase.prototype.initData.call(this, 150);
+  ChartBase.prototype.initData.call(this);
 }
 
 LineChart.prototype.initOyProps = function() {
@@ -157,7 +151,7 @@ LineChart.prototype.drawSelectedChartContent = function() {
 
     this.ctx.beginPath();
     this.ctx.globalAlpha = 1;
-    this.ctx.strokeStyle = GRID_LINES_COLOR;
+    this.ctx.strokeStyle = this.gridLinesColor;
     this.ctx.lineWidth = 1;
     this.ctx.moveTo(this.selectedScreenX + 0.5, 0);
     this.ctx.lineTo(this.selectedScreenX + 0.5, this.bottomY);

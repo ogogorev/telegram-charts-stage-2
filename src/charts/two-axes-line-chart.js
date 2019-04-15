@@ -2,16 +2,13 @@ import { getScreenXByInd, getYCoords } from './chart';
 import { LineChart } from './line-chart';
 import { AnimatedValue, AnimatedArray, main } from '../animations';
 import {
-  createLabelFromDate,
-  getMin, getMax,
-  getMatrixMax,
+  getMax,
   debounce, getGridValuesByMax,
   getStepForGridValues,
   getDataColumnByName
 } from '../utils';
 import {
   CHART_GRID_PADDING,
-  GRID_LINES_COLOR,
   CHART_HEADER_HEIGHT,
   CHART_HEADER_MARGIN_BOTTOM,
   CHART_MAX_WIDTH,
@@ -104,7 +101,7 @@ TwoAxesLineChart.prototype.drawOyLabels = function(oyLabels) {
     this.ctx.beginPath();
     this.ctx.globalAlpha = 1;
     this.ctx.lineWidth = 1;
-    this.ctx.strokeStyle = GRID_LINES_COLOR;
+    this.ctx.strokeStyle = this.gridLinesColor;
     for (var i = 1; i < 6; i++) {
       var y = (oyLabels.labels.length - i) * this.gridLinesHeight;
 

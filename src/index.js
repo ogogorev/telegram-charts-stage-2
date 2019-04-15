@@ -13,12 +13,6 @@ import { percentageStackedAreaChart } from './charts/stacked-area-chart';
 
 function main() {
 
-  // console.log(chart_data1);
-  // console.log(chart_data2);
-  // console.log(chart_data3);
-  // console.log(chart_data4);
-  // console.log(chart_data5);
-
 
   // var chart = createChart(400, 450, chart_data);
 
@@ -37,11 +31,35 @@ function main() {
   // var chart = percentageStackedAreaChart(chart_data5, 'Stacked area chart');
   // document.body.append(chart);
 
-  lineChart(document.body, chart_data1, 'Line chart');
-  twoAxesLineChart(document.body, chart_data2, 'Two axes line chart');
-  stackedBarChart(document.body, chart_data3, 'Stacked bar chart');
-  barChart(document.body, chart_data4, 'Bar chart');
-  percentageStackedAreaChart(document.body, chart_data5, 'Stacked area chart');
+  var appContainer = document.getElementById('app-container');
+
+  var charts = [];
+
+  charts.push(lineChart(appContainer, chart_data1, 'Line chart'));
+  charts.push(twoAxesLineChart(appContainer, chart_data2, 'Two axes line chart'));
+  charts.push(stackedBarChart(appContainer, chart_data3, 'Stacked bar chart'));
+  charts.push(barChart(appContainer, chart_data4, 'Bar chart'));
+  charts.push(percentageStackedAreaChart(appContainer, chart_data5, 'Stacked area chart'));
+
+  var isDayMode = true;
+  var button = document.getElementById('mode');
+  button.addEventListener('click', function() {
+    isDayMode = !isDayMode;
+
+    for (var i = 0; i < charts.length; i++) {
+      charts[i].switchMode(isDayMode);
+    }
+
+    if (isDayMode) {
+      button.innerHTML = 'Switch to Night Mode';
+      document.body.classList.remove('night-theme');
+    }
+    else {
+      button.innerHTML = 'Switch to Day Mode';
+      document.body.classList.add('night-theme');
+    }
+
+  });
 
   // testCanvas();
 }

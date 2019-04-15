@@ -12,7 +12,6 @@ import {
 } from '../utils';
 import {
   CHART_GRID_PADDING,
-  GRID_LINES_COLOR,
   CHART_HEADER_HEIGHT,
   CHART_HEADER_MARGIN_BOTTOM,
   CHART_MAX_WIDTH,
@@ -22,11 +21,9 @@ import {
   Y_ANIMATION_TIME,
 } from '../consts';
 
-const MARGIN_TOP = 20; // FIXME Move inside
-
 export function percentageStackedAreaChart(container, data, name) {
   var chart = new PercentageStackedAreaChart(container, data, name);
-  return chart.container;
+  return chart;
 }
 
 export function PercentageStackedAreaChart(container, data) {
@@ -76,12 +73,14 @@ PercentageStackedAreaChart.prototype.updateY = function() {}
 PercentageStackedAreaChart.prototype.initOyProps = function() {
   ChartBase.prototype.initOyProps.apply(this);
 
+  this.marginTop = 20;
+
   this.percentageLabels = {
     alpha: { value: 1},
     offsetY: 0,
     labels: [0, 25, 50, 75, 100]
   };
-  this.gridLinesHeight = Math.round((this.bottomY - MARGIN_TOP) / 4); // move to const
+  this.gridLinesHeight = Math.round((this.bottomY - this.marginTop) / 4); // move to const
 
   this.gridOyTextsColor = '#25252990'; // 50%
 }
@@ -90,7 +89,7 @@ PercentageStackedAreaChart.prototype.initOyProps = function() {
 PercentageStackedAreaChart.prototype.drawOyLabels = function(oyLabels) {
   // if (oyLabels.alpha.value <= 0) return;
   this.ctx.globalAlpha = oyLabels.alpha.value;
-  this.ctx.strokeStyle = GRID_LINES_COLOR; // FIXME color to const
+  this.ctx.strokeStyle = this.gridLinesColor; // FIXME color to const
   this.ctx.fillStyle = this.gridOyTextsColor; // FIXME color to const
   this.ctx.lineWidth = 1;
   this.ctx.beginPath();
@@ -181,9 +180,9 @@ PercentageStackedAreaChart.prototype.drawChartContent = function() {
   X = X.concat(X[X.length-1], X[0]);
   for (var i = this.columns.length - 1; i >= 0 ; i--) {
     var values = this.percents.map(p => p[i]).slice(sI, eI+1);
-    var Y = values.map(v => getScreenY(this.bottomY - MARGIN_TOP, v.value, 100) + MARGIN_TOP);
+    var Y = values.map(v => getScreenY(this.bottomY - this.marginTop, v.value, 100) + this.marginTop);
 
-    var m = getScreenY(this.bottomY - MARGIN_TOP, (mins[i-1]) ? mins[i-1] : 0, 100) + MARGIN_TOP;
+    var m = getScreenY(this.bottomY - this.marginTop, (mins[i-1]) ? mins[i-1] : 0, 100) + this.marginTop;
     Y = Y.concat(m, m);
     this.drawArea(X, Y, this.columns[i].color);
   }
@@ -234,7 +233,7 @@ PercentageStackedAreaChart.prototype.drawSelectedChartContent = function() {
   // if (this.selectedInd > 0) {
 
     this.ctx.beginPath();
-    this.ctx.strokeStyle = GRID_LINES_COLOR;
+    this.ctx.strokeStyle = this.gridLinesColor;
     this.ctx.lineWidth = 1;
     this.ctx.moveTo(this.selectedScreenX + 0.5, 0);
     this.ctx.lineTo(this.selectedScreenX + 0.5, this.bottomY);

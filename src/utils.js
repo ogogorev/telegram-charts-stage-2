@@ -1,8 +1,5 @@
 export function createLabelFromDate(date, withYear=false) {
   const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-
-  // console.log(new Date(date));
-
   var l = new Date(date).getDate() + ' ' + months[new Date(date).getMonth()];
   if (withYear) {
     l = l + ' ' + new Date(date).getFullYear();
@@ -55,20 +52,6 @@ export function getGridValuesByMax(max) { // FIXME Отвязать от 6
   const k = getStepForGridValues(max);
   return [0, 1, 2, 3, 4, 5, 6].map(i => i*k/5);
 }
-
-// console.log('sdsdf', getStepForGridValues(91));
-// console.log('sdsdf', getStepForGridValues(2));
-// console.log('sdsdf', getStepForGridValues(10));
-// console.log('sdsdf', getStepForGridValues(12));
-// console.log('sdsdf', getStepForGridValues(13));
-// console.log('sdsdf', getStepForGridValues(9567));
-// console.log('sdsdf', getStepForGridValues(2000));
-// console.log('sdsdf', getStepForGridValues(8787772));
-// console.log('sdsdf', getStepForGridValues(100));
-// console.log('sdsdf', getStepForGridValues(101));
-
-// 18 0.4 2 2 2.4 1900 400 1700000 20 20
-// console.log('sdsdf', getGridValuesByMax(getStepForGridValues(91)));
 
 export function getStepForGridValues(max, k=1) { // FIXME Отвязать от 6
   if (max == Number.POSITIVE_INFINITY || max == Number.NEGATIVE_INFINITY || max === 0) return 0;
@@ -129,4 +112,12 @@ export function getStackedPercents(values) {
       return round(sum(row.slice(0, i+1)), 2)
     })
   })
+}
+
+export function getStackedArraySums(values) {
+  return transpose(transpose(values).map((row, i) => {
+    return row.map((p, i) => {
+      return round(sum(row.slice(0, i+1)), 2)
+    })
+  }))
 }

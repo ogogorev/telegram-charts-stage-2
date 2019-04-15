@@ -17,14 +17,9 @@ import {
   OY_LABELS_MARGIN_TOP
 } from '../consts';
 
-// const OX_LABELS_ANIMATION_DURATION = 0.25;
-// const PREVIEW_CHART_HEIGHT = 50;
-// const PREVIEW_CHART_MARGIN = 30;
-
-
 export function barChart(container, data, name) {
   var chart = new BarChart(container, data, name);
-  return chart.container;
+  return chart;
 }
 
 export function BarChart(container, data) {

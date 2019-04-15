@@ -15,7 +15,6 @@ import {
   GRID_LINES_COUNT,
   PREVIEW_HEIGHT,
   PREVIEW_INNER_MARGIN_TOP,
-  GRID_LINES_COLOR,
   CHART_HEADER_HEIGHT,
   CHART_HEADER_MARGIN_BOTTOM,
   CHART_MAX_WIDTH,
@@ -23,14 +22,14 @@ import {
   CHART_MAX_HEIGHT,
   Y_ANIMATION_TIME,
   OY_LABELS_MARGIN_TOP,
+  PREVIEW_DAY_THEME,
+  PREVIEW_NIGHT_THEME,
+  CHART_DAY_THEME,
+  CHART_NIGHT_THEME,
+  OX_LABELS_ANIMATION_DURATION,
+  PREVIEW_CHART_HEIGHT,
+  PREVIEW_CHART_MARGIN,
 } from '../consts';
-
-const OX_LABELS_ANIMATION_DURATION = 0.25;
-
-const PREVIEW_CHART_HEIGHT = 40;
-const PREVIEW_CHART_MARGIN = 30;
-
-const GRID_TEXTS_COLOR = '#8E8E93';
 
 export function ChartBase(container, data, name) {
   this.container = container;
@@ -73,8 +72,30 @@ export function ChartBase(container, data, name) {
   container.append(this.chartContainer);
 }
 
-ChartBase.prototype.addListeners = function () {
-  // window.addEventListener('resize', this.onResize.bind(this));
+ChartBase.prototype.addListeners = function () {}
+
+ChartBase.prototype.switchMode = function (isDay=true) {
+  if (isDay) {
+    this.previewUI.switchTheme(PREVIEW_DAY_THEME);
+    this.initColors(CHART_DAY_THEME);
+    this.header.style.color = CHART_DAY_THEME.chartTitleColor;
+    this.info.style.backgroundColor = CHART_DAY_THEME.infoBackgroundColor;
+    this.info.style.color = CHART_DAY_THEME.infoTextColor;
+  }
+  else {
+    this.previewUI.switchTheme(PREVIEW_NIGHT_THEME);
+    this.initColors(CHART_NIGHT_THEME);
+    this.header.style.color = CHART_NIGHT_THEME.chartTitleColor;
+    this.info.style.backgroundColor = CHART_NIGHT_THEME.infoBackgroundColor;
+    this.info.style.color = CHART_NIGHT_THEME.infoTextColor;
+  }
+  this.draw();
+}
+
+ChartBase.prototype.initColors = function (theme) {
+  this.gridLinesColor = theme.gridLinesColor;
+  this.gridTextsColor = theme.gridTextsColor;
+  this.chartTitleColor = theme.chartTitleColor;
 };
 
 ChartBase.prototype.initCanvas = function () {
@@ -202,6 +223,8 @@ ChartBase.prototype.init = function() {
 }
 
 ChartBase.prototype.initDrawProps = function() {
+  this.initColors(CHART_DAY_THEME);
+
   this.bottomY = this.h - OXLABELS_HEIGHT - PREVIEW_CHART_HEIGHT - PREVIEW_CHART_MARGIN; // FIXME rename to mainChartY
   this.oxLabelsBottomY = this.h - PREVIEW_CHART_HEIGHT - PREVIEW_CHART_MARGIN; // FIXME rename to oxLabelsY
 
@@ -278,7 +301,7 @@ ChartBase.prototype.select = function(x, y) {
   this.selectedScreenX = x;
   this.selectedScreenY = y;
   this.selectedInd = this.getIndByScreenX(x);
-  this.info.setTitle(this.oxLabels[this.selectedInd]);
+  this.info.setTitle(createLabelFromDate(this.dateColumn[this.selectedInd], true));
   this.columns.filter(c => c.isOn).forEach(c => {
     this.info.setRowValue(c.name, c.values[this.selectedInd]);
   });
@@ -321,7 +344,7 @@ ChartBase.prototype.drawOxLabels = function(oxLabelsProps, lastInd) {
 
   this.ctx.beginPath();
   this.ctx.globalAlpha = oxLabelsProps.alpha.value;
-  this.ctx.fillStyle = GRID_TEXTS_COLOR;
+  this.ctx.fillStyle = this.gridTextsColor;
 
   for (var i = lastInd; i >= this.startInd; i-=oxLabelsProps.step) {
     this.ctx.fillText(this.oxLabels[i], Math.floor(i * this.barWidth + this.oxLabelsOffsetX), this.oxLabelsBottomY - OXLABELS_HEIGHT/2);
@@ -370,8 +393,8 @@ ChartBase.prototype.updateOxLabels = function() {
 ChartBase.prototype.drawOyLabels = function(oyLabels) {
   if (oyLabels.alpha.value <= 0) return;
   this.ctx.globalAlpha = oyLabels.alpha.value;
-  this.ctx.strokeStyle = GRID_LINES_COLOR;
-  this.ctx.fillStyle = GRID_TEXTS_COLOR;
+  this.ctx.strokeStyle = this.gridLinesColor;
+  this.ctx.fillStyle = this.gridTextsColor;
   this.ctx.lineWidth = 1;
   this.ctx.beginPath();
 
@@ -434,6 +457,7 @@ ChartBase.prototype.draw = function() {
     this.ctx.clearRect(0, 0, this.w, this.previewChartY);
 
     // this.ctx.beginPath();
+    // this.ctx.strokeStyle = '#000000'
     // this.ctx.rect(0, 0, this.w, this.bottomY);
     // this.ctx.stroke()
 

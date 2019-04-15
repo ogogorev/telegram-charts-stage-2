@@ -1,3 +1,28 @@
+.night-theme {
+  background-color: #242f3e;
+}
+
+#app-container {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-around;
+}
+
+#mode {
+  border: none;
+  background-color: transparent;
+  color: #36A8F1;
+  margin: auto;
+  cursor: pointer;
+  font-size: 18px;
+}
+
+.button-container {
+  display: 100%;
+  text-align: center;
+  margin-bottom: 50px;
+}
+
 .chart {
   margin-bottom: 50px;
 }
@@ -18,8 +43,8 @@
 .point-info {
   position: absolute;
 
-  box-shadow: 0 0 20px 1px grey;
-  border: 0 hidden grey;
+  /* box-shadow: 0 0 20px 1px grey; */
+  border: 2px solid #0000001A;
   border-radius: 8px;
   padding: 8px;
   background-color: white;
@@ -30,7 +55,8 @@
 }
 
 .point-info-title {
-  font-weight: bold;
+  /* font-weight: bold; */
+  margin: 0 0 10px 0;
 }
 
 .point-info-row {
@@ -40,7 +66,7 @@
 
 .point-info-row-value {
   font-weight: bold;
-  margin-left: 10px;
+  margin-left: 15px;
 }
 
 .buttons-container {

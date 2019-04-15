@@ -11,7 +11,7 @@ export function createInfo(name) {
 
   // container.style.backgroundColor = 'red';
 
-  var title = document.createElement('span');
+  var title = document.createElement('h4');
   title.classList.add('point-info-title');
   title.innerHTML = 'Title';
 

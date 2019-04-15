@@ -1,25 +1,24 @@
 import {
-  PREVIEW_INIT_W, PREVIEW_BORDER_WIDTH, PREVIEW_MASK_COLOR, PREVIEW_INNER_MARGIN_TOP
+  PREVIEW_INIT_W, previewMaskColor, PREVIEW_INNER_MARGIN_TOP, PREVIEW_DAY_THEME
 } from '../consts.js';
 
 const PREVIEW_RESIZE_AREA_WIDTH = 10;
 const PREVIEW_MIN_WIDTH = 30;
 
-
-const PREVIEW_BORDER_COLOR = '#C0D1E1';
 const PREVIEW_BORDERS_WIDTH = 10;
 const PREVIEW_BORDER_RADIUS = 5;
-
-const PREVIEW_MASK_ALPHA = .6;
-const PREVIEW_CORNERS_FILL_COLOR = '#FFFFFF';
 
 export function preview(w, h) {
   var canvas = document.createElement('canvas');
   canvas.width = w;
   canvas.height = h;
 
+  var previewMaskColor = '#000000';
+  var previewMaskAlpha = '#000000';
+  var previewBorderColor = '#000000';
+  var previewCornersFillColor = '#000000';
+
   var previewHeight = canvas.height - PREVIEW_INNER_MARGIN_TOP * 2;
-  // canvas.style.position = 'absolute';
   var ctx = canvas.getContext('2d');
 
   var leftX = (1 - PREVIEW_INIT_W) * canvas.width;
@@ -42,9 +41,22 @@ export function preview(w, h) {
 
     leftX = state.left * canvas.width;
     rightX = state.right * canvas.width;
-    
+
     draw();
   }
+
+  canvas.switchTheme = function(theme) {
+    setTheme(theme);
+    draw();
+  }
+
+  function setTheme(theme) {
+    previewMaskColor = theme.previewMaskColor;
+    previewMaskAlpha = theme.previewMaskAlpha;
+    previewBorderColor = theme.previewBorderColor;
+    previewCornersFillColor = theme.previewCornersFillColor;
+  }
+  setTheme(PREVIEW_DAY_THEME);
 
   canvas.onmousedown = function(e) {
     // console.log('mouse down', e);
@@ -114,8 +126,8 @@ export function preview(w, h) {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
     ctx.beginPath();
-    ctx.fillStyle = PREVIEW_MASK_COLOR;
-    ctx.globalAlpha = PREVIEW_MASK_ALPHA;
+    ctx.fillStyle = previewMaskColor;
+    ctx.globalAlpha = previewMaskAlpha;
 
     var left = leftX;
     var right = rightX;
@@ -126,7 +138,7 @@ export function preview(w, h) {
 
 
     ctx.globalAlpha = 1;
-    ctx.fillStyle = PREVIEW_CORNERS_FILL_COLOR;
+    ctx.fillStyle = previewCornersFillColor;
 
     ctx.beginPath();
     ctx.arc(
@@ -180,7 +192,7 @@ export function preview(w, h) {
     ctx.lineTo(PREVIEW_BORDER_RADIUS, canvas.height - PREVIEW_INNER_MARGIN_TOP);
     ctx.fill();
 
-    ctx.strokeStyle = PREVIEW_BORDER_COLOR;
+    ctx.strokeStyle = previewBorderColor;
     ctx.lineWidth = 1 + offX;
     ctx.globalAlpha = 1;
     roundRect(
@@ -192,7 +204,7 @@ export function preview(w, h) {
       [PREVIEW_BORDER_RADIUS, PREVIEW_BORDER_RADIUS, PREVIEW_BORDER_RADIUS, PREVIEW_BORDER_RADIUS]
     );
 
-    ctx.fillStyle = PREVIEW_BORDER_COLOR;
+    ctx.fillStyle = previewBorderColor;
     roundRect(
       ctx,
       left + offX,

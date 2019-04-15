@@ -6,7 +6,7 @@ import {
   createLabelFromDate,
   getMin, getMax,
   debounce, getGridValuesByMax,
-  sum, round, transpose
+  sum, round, transpose, getStackedArraySums
 } from '../utils';
 import {
   OXLABELS_HEIGHT,
@@ -23,16 +23,7 @@ import {
 // const OX_LABELS_ANIMATION_DURATION = 0.25;
 //
 // const PREVIEW_CHART_HEIGHT = 50;
-// const PREVIEW_CHART_MARGIN = 30;
-
-
-function getStackedArraySums(values) {
-  return transpose(transpose(values).map((row, i) => {
-    return row.map((p, i) => {
-      return round(sum(row.slice(0, i+1)), 2)
-    })
-  }))
-}
+// const PREVIEW_CHART_MARGIN = 30
 
 
 export function stackedBarChart(container, data, name) {
@@ -78,7 +69,7 @@ StackedBarChart.prototype.onResize = debounce(function(e) {
 }, 20);
 
 StackedBarChart.prototype.initData = function() {
-  ChartBase.prototype.initData.call(this, 150);
+  ChartBase.prototype.initData.call(this);
 
   this.stackedColumns = this.columns.map(c => c.values.map(
     v => 0
