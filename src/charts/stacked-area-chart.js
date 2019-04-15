@@ -18,11 +18,11 @@ import {
   CHART_MAX_WIDTH,
   CHART_MIN_HEIGHT,
   CHART_MAX_HEIGHT,
+  OY_LABELS_MARGIN_TOP,
+  Y_ANIMATION_TIME,
 } from '../consts';
 
-const Y_ANIMATION_TIME = .3; // FIXME
-const OY_LABELS_MARGIN_TOP = -10;
-const MARGIN_TOP = 18; // FIXME Move inside
+const MARGIN_TOP = 20; // FIXME Move inside
 
 export function percentageStackedAreaChart(container, data, name) {
   var chart = new PercentageStackedAreaChart(container, data, name);
@@ -65,7 +65,7 @@ PercentageStackedAreaChart.prototype.onResize = debounce(function(e) {
 }, 20);
 
 PercentageStackedAreaChart.prototype.initData = function() {
-  ChartBase.prototype.initData.call(this, 10);
+  ChartBase.prototype.initData.call(this);
 
   this.percents = this.columns[0].values.map(v => this.columns.map(c => new AnimatedValue(0, Y_ANIMATION_TIME)))
   this.updatePercents();
@@ -124,7 +124,7 @@ PercentageStackedAreaChart.prototype.updatePercents = function () {
 
   for (var i = 0; i < stackedPercents.length; i++) {
     for (var j = 0; j < stackedPercents[i].length; j++) {
-      this.percents[i][j].set(stackedPercents[i][j], now, true);
+      this.percents[i][j].set(Math.min(100, stackedPercents[i][j]), now, true);
     }
   }
 };
@@ -176,12 +176,13 @@ PercentageStackedAreaChart.prototype.drawChartContent = function() {
     X.push(getScreenXByInd(i, barW, this.offsetX));
   }
 
-  var mins = transpose(this.percents).map(c => getMin(c.map(v => v.value))); // Убрать отсюда, можно пересчитывать при изменениях в данных
+  var mins = transpose(this.percents).map(c => getMin(c.map(v => v.value)));
 
   X = X.concat(X[X.length-1], X[0]);
   for (var i = this.columns.length - 1; i >= 0 ; i--) {
     var values = this.percents.map(p => p[i]).slice(sI, eI+1);
     var Y = values.map(v => getScreenY(this.bottomY - MARGIN_TOP, v.value, 100) + MARGIN_TOP);
+
     var m = getScreenY(this.bottomY - MARGIN_TOP, (mins[i-1]) ? mins[i-1] : 0, 100) + MARGIN_TOP;
     Y = Y.concat(m, m);
     this.drawArea(X, Y, this.columns[i].color);

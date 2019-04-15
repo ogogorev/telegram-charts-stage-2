@@ -17,10 +17,9 @@ import {
   CHART_MAX_WIDTH,
   CHART_MIN_HEIGHT,
   CHART_MAX_HEIGHT,
+  OY_LABELS_MARGIN_TOP,
+  Y_ANIMATION_TIME,
 } from '../consts';
-
-const Y_ANIMATION_TIME = .3; // FIXME
-const OY_LABELS_MARGIN_TOP = -10; // FIXME
 
 export function twoAxesLineChart(container, data, name) {
   var chart = new TwoAxesLineChart(container, data, name);

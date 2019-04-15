@@ -1,6 +1,13 @@
-export function createLabelFromDate(date) {
+export function createLabelFromDate(date, withYear=false) {
   const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-  return `${months[new Date(date).getMonth()]} ${new Date(date).getDate()}`;
+
+  // console.log(new Date(date));
+
+  var l = new Date(date).getDate() + ' ' + months[new Date(date).getMonth()];
+  if (withYear) {
+    l = l + ' ' + new Date(date).getFullYear();
+  }
+  return l;
 }
 
 export function getMatrixMin(m) {

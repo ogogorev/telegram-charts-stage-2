@@ -21,22 +21,21 @@ import {
   CHART_MAX_WIDTH,
   CHART_MIN_HEIGHT,
   CHART_MAX_HEIGHT,
+  Y_ANIMATION_TIME,
+  OY_LABELS_MARGIN_TOP,
 } from '../consts';
 
-
-const Y_ANIMATION_TIME = .3;
 const OX_LABELS_ANIMATION_DURATION = 0.25;
-const OY_LABELS_MARGIN_TOP = -10;
 
 const PREVIEW_CHART_HEIGHT = 40;
 const PREVIEW_CHART_MARGIN = 30;
 
 const GRID_TEXTS_COLOR = '#8E8E93';
 
-
 export function ChartBase(container, data, name) {
   this.container = container;
   this.chartContainer = document.createElement('div');
+  this.chartContainer.classList.add('chart');
 
   // console.log('create chart', container.getBoundingClientRect().height);
 
@@ -161,14 +160,20 @@ ChartBase.prototype.initHeader = function () {
   this.header.append(title);
 
   this.dateRange = document.createElement('h5');
+  // this.dateRange.id = this.name + 'date-range';
   this.dateRange.innerHTML = 'Sat, 11 Apr 2020 - Mon, 12 Mar 2021';
   this.header.append(this.dateRange);
 
   this.chartContainer.append(this.header);
-};
+}
+
+ChartBase.prototype.updateDateRange = function (sI=this.startInd, eI=this.endInd) {
+  this.dateRange.innerHTML = createLabelFromDate(this.dateColumn[sI], true) + ' - ' + createLabelFromDate(this.dateColumn[eI], true);
+}
 
 ChartBase.prototype.initData = function(dataLength=Number.POSITIVE_INFINITY) {
-  this.oxLabels = getDataColumnByName('x', this.data.columns).slice(0, dataLength).map(date => createLabelFromDate(date));
+  this.dateColumn = getDataColumnByName('x', this.data.columns);
+  this.oxLabels = this.dateColumn.slice(0, dataLength).map(date => createLabelFromDate(date));
 
   this.columnNames = Object.keys(this.data.names); // FIXME Remove
   this.columns = [];
@@ -432,7 +437,7 @@ ChartBase.prototype.draw = function() {
     // this.ctx.rect(0, 0, this.w, this.bottomY);
     // this.ctx.stroke()
 
-    this.updateOxLabels();
+    if (this.updateOxLabels()) this.needRedraw = true;
 
     var now = performance.now();
 
@@ -539,6 +544,8 @@ ChartBase.prototype.update = function() {
   this.barWidth = this.gridWidth/(this.L*(this.previewUIRightX-this.previewUILeftX));
   this.offsetX = calculateOffsetX(this.gridWidth, CHART_GRID_PADDING, this.previewUILeftX, this.previewUIRightX);
 
+  this.updateDateRange();
+
   this.calculateOxLabelsOffsetX();
   // this.updateOxLabels();
 
@@ -591,7 +598,7 @@ export function getIndByScreenX(x, step, offset=0) {
   return Math.round((x - offset)/step);
 }
 
-export function getYCoords(height, Y, max) { // FIXME Можно удалить, потому что есть getScreenY
+export function getYCoords(height, Y, max) {
   var coords = []
   for (var i = 0; i < Y.length; i++) {
     coords.push(Math.floor(height - (Y[i]/max) * height));

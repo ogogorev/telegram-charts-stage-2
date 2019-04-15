@@ -7,23 +7,19 @@ import {
   debounce, getGridValuesByMax
 } from '../utils';
 import {
-  OXLABELS_HEIGHT,
   CHART_GRID_PADDING,
-  GRID_LINES_COUNT,
-  PREVIEW_HEIGHT,
   CHART_HEADER_HEIGHT,
   CHART_HEADER_MARGIN_BOTTOM,
   CHART_MAX_WIDTH,
   CHART_MIN_HEIGHT,
   CHART_MAX_HEIGHT,
+  Y_ANIMATION_TIME,
+  OY_LABELS_MARGIN_TOP
 } from '../consts';
 
-const Y_ANIMATION_TIME = 0.3;
-const OX_LABELS_ANIMATION_DURATION = 0.25;
-const OY_LABELS_MARGIN_TOP = -10;
-
-const PREVIEW_CHART_HEIGHT = 50;
-const PREVIEW_CHART_MARGIN = 30;
+// const OX_LABELS_ANIMATION_DURATION = 0.25;
+// const PREVIEW_CHART_HEIGHT = 50;
+// const PREVIEW_CHART_MARGIN = 30;
 
 
 export function barChart(container, data, name) {
@@ -41,6 +37,10 @@ export function BarChart(container, data) {
 
 BarChart.prototype = Object.create(ChartBase.prototype);
 BarChart.prototype.constructor = BarChart;
+
+BarChart.prototype.updateDateRange = function () {
+  ChartBase.prototype.updateDateRange.call(this, this.startInd, this.endInd-1)
+}
 
 BarChart.prototype.addListeners = function () {
   window.addEventListener('resize', this.onResize.bind(this));
@@ -69,7 +69,7 @@ BarChart.prototype.onResize = debounce(function(e) {
 }, 20);
 
 BarChart.prototype.initData = function() {
-  ChartBase.prototype.initData.call(this, 50);
+  ChartBase.prototype.initData.call(this);
 }
 
 BarChart.prototype.calculateOxLabelsOffsetX = function () {

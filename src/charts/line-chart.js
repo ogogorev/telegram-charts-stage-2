@@ -16,9 +16,10 @@ import {
   CHART_MAX_WIDTH,
   CHART_MIN_HEIGHT,
   CHART_MAX_HEIGHT,
+  Y_ANIMATION_TIME
 } from '../consts';
 
-const Y_ANIMATION_TIME = .3; // FIXME
+// const LINE_CHART_
 
 export function lineChart(container, data, name) {
   var chart = new LineChart(container, data, name);
