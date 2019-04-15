@@ -1,0 +1,42 @@
+.point-info {
+  position: absolute;
+
+  box-shadow: 0 0 20px 1px grey;
+  border: 0 hidden grey;
+  border-radius: 8px;
+  padding: 8px;
+  background-color: white;
+  font-size: 12px;
+}
+
+.point-info-title {
+  font-weight: bold;
+}
+
+.point-info-row {
+  display: flex;
+  justify-content: space-between;
+}
+
+.point-info-row-value {
+  font-weight: bold;
+  margin-left: 10px;
+}
+
+.chart-button {
+  display: inline-flex;
+  font-weight: bold;
+  color: white;
+  border: 0px solid #FFFFFF;
+  border-radius: 15px;
+  padding: 10px;
+  margin-right: 10px;
+  cursor: pointer;
+
+  transition: border-width 0.3s;
+}
+
+.chart-button img {
+  width: 16px;
+  margin-right: 4px;
+}

@@ -142,7 +142,7 @@ ChartBase.prototype.initPreviewChartProps = function(dataLength=this.L) {
 ChartBase.prototype.initInfo = function() {
   this.info = createInfo();
   for (var i = 0; i < this.columns.length; i++) {
-    this.info.addRow(this.columns[i].name, 0);
+    this.info.addRow(this.columns[i].name, 0, this.columns[i].color);
   }
   this.container.append(this.info);
 }

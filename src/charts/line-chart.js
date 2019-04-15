@@ -45,8 +45,14 @@ LineChart.prototype.buttonClicked = function(name, isOn) {
   var now = performance.now();
   for (var i = 0; i < this.columns.length; i++) {
     if (this.columns[i].name === name) {
-      if (isOn) this.columns[i].alpha.set(1, now, true)
-      else this.columns[i].alpha.set(0, now, true)
+      if (isOn) {
+        this.columns[i].alpha.set(1, now, true);
+        this.info.enableRow(this.columns[i].name);
+      }
+      else {
+        this.columns[i].alpha.set(0, now, true);
+        this.info.disableRow(this.columns[i].name);
+      }
       this.columns[i].isOn = isOn;
 
       this.gridPreviewMaxY.set(Math.max(this.calculateGridPreviewMaxY(), 0), now, true);

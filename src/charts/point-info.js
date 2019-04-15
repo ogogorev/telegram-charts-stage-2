@@ -2,29 +2,16 @@ const INFO_ANIMATION_TIME = 0.5;
 
 export function createInfo() {
   var container = document.createElement('div');
-  container.style.position = 'absolute';
+  // container.style.position = 'absolute';
   container.classList.add('point-info');
   container.style.transition = 'opacity ' + INFO_ANIMATION_TIME + 's';
-  container.style.opacity = 0;
-  container.style.display = 'none';
-
-
-  // container.style.border = 'solder'
-  container.style.boxShadow = '0 0 20px 1px grey';
-  container.style.border = '0 hidden grey';
-  container.style.borderRadius = '8px';
-  container.style.padding = '8px';
-  container.style.backgroundColor = 'white';
-  container.style.fontSize = '12px';
-  // container.style.border =
-  // container.style.border =
-  // container.style.border =
-  // container.style.border =
+  // container.style.opacity = 0;
+  // container.style.display = 'none';
 
   // container.style.backgroundColor = 'red';
 
   var title = document.createElement('span');
-  title.style.fontWeight = 'bold';
+  title.classList.add('point-info-title');
   title.innerHTML = 'Title';
 
   container.appear = function() {
@@ -36,10 +23,10 @@ export function createInfo() {
   }
 
   container.disappear = function() {
-    container.style.opacity = 0;
-    setTimeout(function() {
-      container.style.display = 'none';
-    }, INFO_ANIMATION_TIME * 1000)
+    // container.style.opacity = 0;
+    // setTimeout(function() {
+    //   container.style.display = 'none';
+    // }, INFO_ANIMATION_TIME * 1000)
   }
 
   container.setTitle = function(text) {
@@ -50,29 +37,37 @@ export function createInfo() {
   //   return conatinergetCli
   // }
 
-  // var rows = {};
   container.addRow = function(text, value, color='black') {
-    // rows[text] = value;
-
     var newRow = document.createElement('div');
-
-    newRow.style.display = 'flex';
-    newRow.style.justifyContent = 'space-between';
+    newRow.id = 'row' + text;
+    newRow.classList.add('point-info-row')
 
     var textSpan = document.createElement('span');
-    // textSpan.id = text;
     textSpan.innerHTML = text;
 
     var valueSpan = document.createElement('span');
+    valueSpan.classList.add('point-info-row-value')
     valueSpan.id = text;
     valueSpan.style.color = color;
-    valueSpan.style.marginLeft = '10px';
     valueSpan.innerHTML = value;
 
     newRow.append(textSpan);
     newRow.append(valueSpan);
-
     container.append(newRow);
+  }
+
+  container.enableRow = function(text) {
+    var e = document.getElementById('row' + text);
+    if (e) {
+      e.style.display = 'flex';
+    }
+  }
+
+  container.disableRow = function(text) {
+    var e = document.getElementById('row' + text);
+    if (e) {
+      e.style.display = 'none';
+    }
   }
 
   container.setRowValue = function(key, value) {
