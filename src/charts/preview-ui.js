@@ -6,26 +6,29 @@ const PREVIEW_RESIZE_AREA_WIDTH = 10;
 const PREVIEW_MIN_WIDTH = 30;
 
 
-const PREVIEW_BORDER_COLOR = 'red';
+const PREVIEW_BORDER_COLOR = '#C0D1E1';
 const PREVIEW_BORDERS_WIDTH = 10;
-const PREVIEW_BORDER_RADIUS = 10;
+const PREVIEW_BORDER_RADIUS = 5;
+
+const PREVIEW_MASK_ALPHA = .6;
+const PREVIEW_CORNERS_FILL_COLOR = '#FFFFFF';
 
 export function preview(w, h) {
   var canvas = document.createElement('canvas');
   canvas.width = w;
   canvas.height = h;
 
-  var previewHeight = h - PREVIEW_INNER_MARGIN_TOP * 2;
+  var previewHeight = canvas.height - PREVIEW_INNER_MARGIN_TOP * 2;
   // canvas.style.position = 'absolute';
   var ctx = canvas.getContext('2d');
 
-  var leftX = (1 - PREVIEW_INIT_W) * w;
-  var rightX = 1 * w;
+  var leftX = (1 - PREVIEW_INIT_W) * canvas.width;
+  var rightX = 1 * canvas.width;
 
   var state = { left: 1 - PREVIEW_INIT_W, right: 1 };
   function updateState() {
-    state.left = leftX/w;
-    state.right = rightX/w;
+    state.left = leftX/canvas.width;
+    state.right = rightX/canvas.width;
 
     if (canvas.onupdate) {
       canvas.onupdate(state);
@@ -33,8 +36,18 @@ export function preview(w, h) {
   }
   updateState();
 
+
+  canvas.updateWidth = function(w) {
+    canvas.width = w;
+
+    leftX = state.left * canvas.width;
+    rightX = state.right * canvas.width;
+    
+    draw();
+  }
+
   canvas.onmousedown = function(e) {
-    console.log('mouse down', e);
+    // console.log('mouse down', e);
 
     if (isLeftZone(e.offsetX)) {
       var offsetLeftX = leftX - e.clientX;
@@ -59,7 +72,7 @@ export function preview(w, h) {
       onmousemove = function(e) {
         leftX = e.clientX + offsetLeftX;
         if (leftX < 0) leftX = 0;
-        if (leftX > w - currWidth) leftX = w - currWidth;
+        if (leftX > canvas.width - currWidth) leftX = canvas.width - currWidth;
         rightX = leftX + currWidth;
         // requestAnimationFrame(draw);
         // updateState();
@@ -76,7 +89,7 @@ export function preview(w, h) {
       onmousemove = function(e) {
         rightX = e.clientX + offsetRightX;
         if (rightX < leftX + PREVIEW_MIN_WIDTH) rightX = leftX + PREVIEW_MIN_WIDTH;
-        else if (rightX > w) rightX = w;
+        else if (rightX > canvas.width) rightX = canvas.width;
         // requestAnimationFrame(draw);
         // updateState();
 
@@ -98,22 +111,22 @@ export function preview(w, h) {
   var offX = 1;
   var maskOverlayX = 4;
   function draw() {
-    ctx.clearRect(0, 0, w, h);
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
 
     ctx.beginPath();
     ctx.fillStyle = PREVIEW_MASK_COLOR;
-    ctx.globalAlpha = 0.5;
+    ctx.globalAlpha = PREVIEW_MASK_ALPHA;
 
     var left = leftX;
     var right = rightX;
     ctx.rect(0, PREVIEW_INNER_MARGIN_TOP, left + maskOverlayX, previewHeight);
     // ctx.rect(0, PREVIEW_INNER_MARGIN_TOP, left, previewHeight);
-    ctx.rect(right - maskOverlayX, PREVIEW_INNER_MARGIN_TOP, w - right + maskOverlayX, previewHeight);
+    ctx.rect(right - maskOverlayX, PREVIEW_INNER_MARGIN_TOP, canvas.width - right + maskOverlayX, previewHeight);
     ctx.fill();
 
 
     ctx.globalAlpha = 1;
-    ctx.fillStyle = '#FFFFFF';
+    ctx.fillStyle = PREVIEW_CORNERS_FILL_COLOR;
 
     ctx.beginPath();
     ctx.arc(
@@ -130,41 +143,41 @@ export function preview(w, h) {
 
     ctx.beginPath();
     ctx.arc(
-      w - PREVIEW_BORDER_RADIUS,
+      canvas.width - PREVIEW_BORDER_RADIUS,
       PREVIEW_BORDER_RADIUS + PREVIEW_INNER_MARGIN_TOP,
       PREVIEW_BORDER_RADIUS,
       1.5*Math.PI,
       0*Math.PI
     );
-    ctx.moveTo(w, PREVIEW_BORDER_RADIUS + PREVIEW_INNER_MARGIN_TOP);
-    ctx.lineTo(w, PREVIEW_INNER_MARGIN_TOP);
-    ctx.lineTo(w - PREVIEW_BORDER_RADIUS, PREVIEW_INNER_MARGIN_TOP);
+    ctx.moveTo(canvas.width, PREVIEW_BORDER_RADIUS + PREVIEW_INNER_MARGIN_TOP);
+    ctx.lineTo(canvas.width, PREVIEW_INNER_MARGIN_TOP);
+    ctx.lineTo(canvas.width - PREVIEW_BORDER_RADIUS, PREVIEW_INNER_MARGIN_TOP);
     ctx.fill();
 
     ctx.beginPath();
     ctx.arc(
-      w - PREVIEW_BORDER_RADIUS,
-      h - PREVIEW_BORDER_RADIUS - PREVIEW_INNER_MARGIN_TOP,
+      canvas.width - PREVIEW_BORDER_RADIUS,
+      canvas.height - PREVIEW_BORDER_RADIUS - PREVIEW_INNER_MARGIN_TOP,
       PREVIEW_BORDER_RADIUS,
       0*Math.PI,
       0.5*Math.PI
     );
-    ctx.moveTo(w - PREVIEW_BORDER_RADIUS, h - PREVIEW_INNER_MARGIN_TOP);
-    ctx.lineTo(w, h - PREVIEW_INNER_MARGIN_TOP);
-    ctx.lineTo(w, h - PREVIEW_BORDER_RADIUS - PREVIEW_INNER_MARGIN_TOP);
+    ctx.moveTo(canvas.width - PREVIEW_BORDER_RADIUS, canvas.height - PREVIEW_INNER_MARGIN_TOP);
+    ctx.lineTo(canvas.width, canvas.height - PREVIEW_INNER_MARGIN_TOP);
+    ctx.lineTo(canvas.width, canvas.height - PREVIEW_BORDER_RADIUS - PREVIEW_INNER_MARGIN_TOP);
     ctx.fill();
 
     ctx.beginPath();
     ctx.arc(
       PREVIEW_BORDER_RADIUS,
-      h - PREVIEW_BORDER_RADIUS - PREVIEW_INNER_MARGIN_TOP,
+      canvas.height - PREVIEW_BORDER_RADIUS - PREVIEW_INNER_MARGIN_TOP,
       PREVIEW_BORDER_RADIUS,
       0.5*Math.PI,
       1*Math.PI
     );
-    ctx.moveTo(0, h - PREVIEW_BORDER_RADIUS - PREVIEW_INNER_MARGIN_TOP);
-    ctx.lineTo(0, h - PREVIEW_INNER_MARGIN_TOP);
-    ctx.lineTo(PREVIEW_BORDER_RADIUS, h - PREVIEW_INNER_MARGIN_TOP);
+    ctx.moveTo(0, canvas.height - PREVIEW_BORDER_RADIUS - PREVIEW_INNER_MARGIN_TOP);
+    ctx.lineTo(0, canvas.height - PREVIEW_INNER_MARGIN_TOP);
+    ctx.lineTo(PREVIEW_BORDER_RADIUS, canvas.height - PREVIEW_INNER_MARGIN_TOP);
     ctx.fill();
 
     ctx.strokeStyle = PREVIEW_BORDER_COLOR;

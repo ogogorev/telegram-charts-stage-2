@@ -8,7 +8,17 @@ import {
   debounce, getGridValuesByMax,
   sum, round, transpose
 } from '../utils';
-import { OXLABELS_HEIGHT, CHART_GRID_PADDING, GRID_LINES_COUNT, PREVIEW_HEIGHT } from '../consts';
+import {
+  OXLABELS_HEIGHT,
+  CHART_GRID_PADDING,
+  GRID_LINES_COUNT,
+  PREVIEW_HEIGHT,
+  CHART_HEADER_HEIGHT,
+  CHART_HEADER_MARGIN_BOTTOM,
+  CHART_MAX_WIDTH,
+  CHART_MIN_HEIGHT,
+  CHART_MAX_HEIGHT,
+} from '../consts';
 
 const Y_ANIMATION_TIME = 0.3;
 const OX_LABELS_ANIMATION_DURATION = 0.25;
@@ -28,12 +38,12 @@ function getStackedArraySums(values) {
 }
 
 
-export function stackedBarChart(w, h, data) {
-  var chart = new StackedBarChart(w, h, data);
-  return chart.container;
+export function stackedBarChart(container, data, name) {
+  var chart = new StackedBarChart(container, data, name);
+  return chart;
 }
 
-function StackedBarChart(w, h, data) {
+function StackedBarChart(container, data) {
   // console.log(data);
   BarChart.apply(this, arguments);
   // this.L++;
@@ -44,8 +54,34 @@ function StackedBarChart(w, h, data) {
 StackedBarChart.prototype = Object.create(BarChart.prototype);
 StackedBarChart.prototype.constructor = StackedBarChart;
 
+StackedBarChart.prototype.addListeners = function () {
+  window.addEventListener('resize', this.onResize.bind(this));
+}
+
+StackedBarChart.prototype.onResize = debounce(function(e) {
+  var newWidth = this.container.getBoundingClientRect().width;
+  var newHeight = this.container.getBoundingClientRect().height;
+
+  console.log('resize', this.name);
+
+  newWidth = Math.min(newWidth, CHART_MAX_WIDTH);
+  newHeight = Math.min(newHeight, CHART_MAX_HEIGHT);
+  newHeight = Math.max(newHeight, CHART_MIN_HEIGHT);
+
+  if (newWidth !== this.w) {
+    this.w = newWidth;
+    this.updateWidth();
+  }
+
+  if (newHeight !== this.h) {
+    // this.h = newHeight;
+    // this.updateHeight();
+  }
+
+}, 20);
+
 StackedBarChart.prototype.initData = function() {
-  ChartBase.prototype.initData.call(this, 50);
+  ChartBase.prototype.initData.call(this, 150);
 
   this.stackedColumns = this.columns.map(c => c.values.map(
     v => 0
@@ -93,6 +129,8 @@ StackedBarChart.prototype.buttonClicked = function(name, isOn) {
   for (var i = 0; i < this.columns.length; i++) {
     if (this.columns[i].name === name) {
       this.columns[i].isOn = isOn;
+      if (isOn) this.info.enableRow(this.columns[i].name);
+      else this.info.disableRow(this.columns[i].name);
       this.updateStackedColumns();
       this.gridPreviewMaxY.set(Math.max(this.calculateGridPreviewMaxY(), 0), now, true);
       this.update();
@@ -132,10 +170,10 @@ StackedBarChart.prototype.drawChartContent = function() {
     .map(c => getYCoords(this.bottomY, c.map(v => v.value), this.gridMaxY.value));
   YCoords.splice(0, 0, YCoords[1].map(c => this.bottomY));
 
+  this.ctx.globalAlpha = (this.selectedInd > -1) ? 0.6 : 1; // FIXME Alpha to const
 
   for (var i = this.columns.length-1; i >= 0; i--) {
     this.ctx.beginPath();
-    this.ctx.globalAlpha = 1; // FIXME Alpha to const
 
     for (var j = 0; j < X.length; j++) {
       if (j !== this.selectedInd - sI) {
@@ -144,6 +182,26 @@ StackedBarChart.prototype.drawChartContent = function() {
     }
 
     this.ctx.fillStyle = this.columns[i].color;
+    this.ctx.fill();
+  }
+
+  if (this.selectedInd > -1) {
+    this.drawSelectedChartContent();
+  }
+
+}
+
+StackedBarChart.prototype.drawSelectedChartContent = function () {
+  var barW = Math.round(this.barWidth*this.round)/this.round;
+  var selectedIndX = this.getScreenXByInd(this.selectedInd);
+
+  this.ctx.globalAlpha = 1;
+
+  for (var i = this.columns.length-1; i >= 0; i--) {
+    var y = Math.floor(getScreenY(this.bottomY, this.stackedColumnsAnimated[i][this.selectedInd].value, this.gridMaxY.value))
+    this.ctx.beginPath();
+    this.ctx.fillStyle = this.columns[i].color;
+    this.ctx.rect(selectedIndX, y, barW, this.bottomY - y);
     this.ctx.fill();
   }
 }

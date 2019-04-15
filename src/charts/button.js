@@ -14,7 +14,7 @@ export function createButton(color, text, onClick) {
   button.onclick = function() {
     button.isOn = !button.isOn;
     if (!button.isOn) {
-      button.style.borderWidth = '10px';
+      // button.style.borderWidth = '0px';
     }
     if (onClick) onClick(button.name, button.isOn);
   };

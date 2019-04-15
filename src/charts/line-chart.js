@@ -8,16 +8,24 @@ import {
   getStepForGridValues,
   getDataColumnByName
 } from '../utils';
-import { OXLABELS_HEIGHT, CHART_GRID_PADDING, GRID_LINES_COUNT, PREVIEW_HEIGHT } from '../consts';
+import {
+  CHART_GRID_PADDING,
+  GRID_LINES_COLOR,
+  CHART_HEADER_HEIGHT,
+  CHART_HEADER_MARGIN_BOTTOM,
+  CHART_MAX_WIDTH,
+  CHART_MIN_HEIGHT,
+  CHART_MAX_HEIGHT,
+} from '../consts';
 
 const Y_ANIMATION_TIME = .3; // FIXME
 
-export function lineChart(w, h, data) {
-  var chart = new LineChart(w, h, data);
-  return chart.container;
+export function lineChart(container, data, name) {
+  var chart = new LineChart(container, data, name);
+  return chart;
 }
 
-export function LineChart(w, h, data) {
+export function LineChart(container, data) {
   console.log(data);
   ChartBase.apply(this, arguments);
   this.init();
@@ -25,6 +33,32 @@ export function LineChart(w, h, data) {
 
 LineChart.prototype = Object.create(ChartBase.prototype);
 LineChart.prototype.constructor = LineChart;
+
+LineChart.prototype.addListeners = function () {
+  window.addEventListener('resize', this.onResize.bind(this));
+}
+
+LineChart.prototype.onResize = debounce(function(e) {
+  var newWidth = this.container.getBoundingClientRect().width;
+  var newHeight = this.container.getBoundingClientRect().height;
+
+  console.log('resize', this.name);
+
+  newWidth = Math.min(newWidth, CHART_MAX_WIDTH);
+  newHeight = Math.min(newHeight, CHART_MAX_HEIGHT);
+  newHeight = Math.max(newHeight, CHART_MIN_HEIGHT);
+
+  if (newWidth !== this.w) {
+    this.w = newWidth;
+    this.updateWidth();
+  }
+
+  if (newHeight !== this.h) {
+    // this.h = newHeight;
+    // this.updateHeight();
+  }
+
+}, 20);
 
 LineChart.prototype.initData = function() {
   ChartBase.prototype.initData.call(this, 150);
@@ -80,6 +114,10 @@ LineChart.prototype.drawChartContent = function() {
 
   for (var i = 0; i < this.columns.length; i++) {
     var Y = getYCoords(this.bottomY, this.columns[i].values.slice(sI, eI+1), this.getGridMaxForColumn(this.columns[i]));
+
+    // console.log('draw', this.columns[i].values.slice(sI, eI+1));
+    // console.log('line draw max', this.getGridMaxForColumn(this.columns[i]));
+
     this.drawLine(X, Y, this.columns[i].color, this.columns[i].alpha.value);
   }
 }
@@ -104,8 +142,8 @@ LineChart.prototype.drawLine = function(X, Y, color, alpha=1) {
   }
 }
 
-LineChart.prototype.drawSelected = function() {
-  if (this.selectedInd > 0) {
+LineChart.prototype.drawSelectedChartContent = function() {
+  // if (this.selectedInd > 0) {
 
     var barW = Math.round(this.barWidth*this.round)/this.round;
     var selectedIndX = Math.floor(this.getScreenXByInd(this.selectedInd, barW));
@@ -117,7 +155,8 @@ LineChart.prototype.drawSelected = function() {
     var filteredColumns = this.columns.filter(c => c.isOn);
 
     this.ctx.beginPath();
-    this.ctx.strokeStyle = '#000000';
+    this.ctx.globalAlpha = 1;
+    this.ctx.strokeStyle = GRID_LINES_COLOR;
     this.ctx.lineWidth = 1;
     this.ctx.moveTo(this.selectedScreenX + 0.5, 0);
     this.ctx.lineTo(this.selectedScreenX + 0.5, this.bottomY);
@@ -154,15 +193,13 @@ LineChart.prototype.drawSelected = function() {
       this.ctx.closePath();
     });
 
-    // this.info.style.left = selectedIndX + (this.barWidth - this.info.offsetWidth)/2 + 'px';
-    this.info.style.left = this.selectedScreenX - this.info.offsetWidth - 30 + 'px';
-    // this.info.style.top = Y[ind] - this.info.offsetHeight  - 15 + 'px'; // FIXME this.info margin
-    this.info.style.top = this.selectedScreenY - this.info.offsetHeight/2 + 'px'; // FIXME this.info margin
-    this.info.appear();
-  }
-  else {
-    this.info.disappear()
-  }
+    // this.info.style.left = Math.max(this.selectedScreenX - this.info.offsetWidth - 30, 0) + 'px'; // FIXME this.info margin
+    // this.info.style.top = Math.max(this.selectedScreenY - this.info.offsetHeight, 0) + 'px';
+    // this.info.appear();
+  // }
+  // else {
+  //   this.info.disappear()
+  // }
 }
 
 LineChart.prototype.getGridMaxForColumnPreview = function(column) {

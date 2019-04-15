@@ -9,17 +9,25 @@ import {
   getStepForGridValues,
   getDataColumnByName
 } from '../utils';
-import { OXLABELS_HEIGHT, CHART_GRID_PADDING, GRID_LINES_COUNT, PREVIEW_HEIGHT } from '../consts';
+import {
+  CHART_GRID_PADDING,
+  GRID_LINES_COLOR,
+  CHART_HEADER_HEIGHT,
+  CHART_HEADER_MARGIN_BOTTOM,
+  CHART_MAX_WIDTH,
+  CHART_MIN_HEIGHT,
+  CHART_MAX_HEIGHT,
+} from '../consts';
 
 const Y_ANIMATION_TIME = .3; // FIXME
 const OY_LABELS_MARGIN_TOP = -10; // FIXME
 
-export function twoAxesLineChart(w, h, data) {
-  var chart = new TwoAxesLineChart(w, h, data);
-  return chart.container;
+export function twoAxesLineChart(container, data, name) {
+  var chart = new TwoAxesLineChart(container, data, name);
+  return chart;
 }
 
-function TwoAxesLineChart(w, h, data) {
+function TwoAxesLineChart(container, data) {
   // console.log(data);
   LineChart.apply(this, arguments);
   // this.init();
@@ -27,6 +35,32 @@ function TwoAxesLineChart(w, h, data) {
 
 TwoAxesLineChart.prototype = Object.create(LineChart.prototype);
 TwoAxesLineChart.prototype.constructor = TwoAxesLineChart;
+
+TwoAxesLineChart.prototype.addListeners = function () {
+  window.addEventListener('resize', this.onResize.bind(this));
+}
+
+TwoAxesLineChart.prototype.onResize = debounce(function(e) {
+  var newWidth = this.container.getBoundingClientRect().width;
+  var newHeight = this.container.getBoundingClientRect().height;
+
+  console.log('resize', this.name);
+
+  newWidth = Math.min(newWidth, CHART_MAX_WIDTH);
+  newHeight = Math.min(newHeight, CHART_MAX_HEIGHT);
+  newHeight = Math.max(newHeight, CHART_MIN_HEIGHT);
+
+  if (newWidth !== this.w) {
+    this.w = newWidth;
+    this.updateWidth();
+  }
+
+  if (newHeight !== this.h) {
+    // this.h = newHeight;
+    // this.updateHeight();
+  }
+
+}, 20)
 
 TwoAxesLineChart.prototype.initOyProps = function() {
   LineChart.prototype.initOyProps.apply(this);
@@ -71,7 +105,7 @@ TwoAxesLineChart.prototype.drawOyLabels = function(oyLabels) {
     this.ctx.beginPath();
     this.ctx.globalAlpha = 1;
     this.ctx.lineWidth = 1;
-    this.ctx.strokeStyle = 'black'; // FIXME Color to const
+    this.ctx.strokeStyle = GRID_LINES_COLOR;
     for (var i = 1; i < 6; i++) {
       var y = (oyLabels.labels.length - i) * this.gridLinesHeight;
 

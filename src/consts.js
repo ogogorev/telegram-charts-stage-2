@@ -1,10 +1,18 @@
-export const PREVIEW_HEIGHT = 54;
+export const PREVIEW_HEIGHT = 44;
+export const PREVIEW_INNER_MARGIN_TOP = 2;
 export const PREVIEW_INIT_W = 0.2;
 export const PREVIEW_BORDER_WIDTH = 10;
-export const PREVIEW_MASK_COLOR = 'black';
-export const PREVIEW_INNER_MARGIN_TOP = 2;
+export const PREVIEW_MASK_COLOR = '#E2EEF9';
 
 // chart
 export const CHART_GRID_PADDING = 10;
 export const GRID_LINES_COUNT = 6;
 export const OXLABELS_HEIGHT = 30;
+export const GRID_LINES_COLOR = '#182D3B1A';
+
+export const CHART_HEADER_HEIGHT = 20;
+export const CHART_HEADER_MARGIN_BOTTOM = 20;
+
+export const CHART_MAX_WIDTH = 500;
+export const CHART_MIN_HEIGHT = 150 + CHART_HEADER_HEIGHT + CHART_HEADER_MARGIN_BOTTOM + 80;
+export const CHART_MAX_HEIGHT = 400 + CHART_HEADER_HEIGHT + CHART_HEADER_MARGIN_BOTTOM + 80;

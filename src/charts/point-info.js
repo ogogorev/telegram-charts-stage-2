@@ -1,12 +1,13 @@
-const INFO_ANIMATION_TIME = 0.5;
+const INFO_ANIMATION_TIME = 0.3;
 
-export function createInfo() {
+export function createInfo(name) {
   var container = document.createElement('div');
   // container.style.position = 'absolute';
   container.classList.add('point-info');
   container.style.transition = 'opacity ' + INFO_ANIMATION_TIME + 's';
-  // container.style.opacity = 0;
-  // container.style.display = 'none';
+  container.style.opacity = 0;
+  container.style.display = 'none';
+  container.isOn = false;
 
   // container.style.backgroundColor = 'red';
 
@@ -15,6 +16,7 @@ export function createInfo() {
   title.innerHTML = 'Title';
 
   container.appear = function() {
+    container.isOn = true;
     container.style.display = 'block';
 
     setTimeout(function() {
@@ -23,10 +25,13 @@ export function createInfo() {
   }
 
   container.disappear = function() {
-    // container.style.opacity = 0;
-    // setTimeout(function() {
-    //   container.style.display = 'none';
-    // }, INFO_ANIMATION_TIME * 1000)
+    if (container.isOn) {
+      container.isOn = false;
+      container.style.opacity = 0;
+      setTimeout(function() {
+        container.style.display = 'none';
+      }, INFO_ANIMATION_TIME * 1000)
+    }
   }
 
   container.setTitle = function(text) {
@@ -36,6 +41,7 @@ export function createInfo() {
   // container.getWidth = function() {
   //   return conatinergetCli
   // }
+  var rows = {};
 
   container.addRow = function(text, value, color='black') {
     var newRow = document.createElement('div');
@@ -50,6 +56,8 @@ export function createInfo() {
     valueSpan.id = text;
     valueSpan.style.color = color;
     valueSpan.innerHTML = value;
+
+    rows[text] = valueSpan;
 
     newRow.append(textSpan);
     newRow.append(valueSpan);
@@ -71,7 +79,7 @@ export function createInfo() {
   }
 
   container.setRowValue = function(key, value) {
-    document.getElementById(key).innerHTML = value;
+    rows[key].innerHTML = value;
   }
 
   container.append(title);

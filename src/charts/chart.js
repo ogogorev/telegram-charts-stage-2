@@ -6,42 +6,56 @@ import {
   createLabelFromDate,
   getMatrixMax,
   getStepForGridValues,
-  getDataColumnByName
+  getDataColumnByName,
+  debounce
 } from '../utils';
-import { OXLABELS_HEIGHT, CHART_GRID_PADDING, GRID_LINES_COUNT, PREVIEW_HEIGHT, PREVIEW_INNER_MARGIN_TOP } from '../consts';
+import {
+  OXLABELS_HEIGHT,
+  CHART_GRID_PADDING,
+  GRID_LINES_COUNT,
+  PREVIEW_HEIGHT,
+  PREVIEW_INNER_MARGIN_TOP,
+  GRID_LINES_COLOR,
+  CHART_HEADER_HEIGHT,
+  CHART_HEADER_MARGIN_BOTTOM,
+  CHART_MAX_WIDTH,
+  CHART_MIN_HEIGHT,
+  CHART_MAX_HEIGHT,
+} from '../consts';
 
 
 const Y_ANIMATION_TIME = .3;
 const OX_LABELS_ANIMATION_DURATION = 0.25;
 const OY_LABELS_MARGIN_TOP = -10;
 
-const PREVIEW_CHART_HEIGHT = 50;
+const PREVIEW_CHART_HEIGHT = 40;
 const PREVIEW_CHART_MARGIN = 30;
 
-export function ChartBase(w, h, data) {
-  this.w = w;
-  this.h = h;
-  this.container = document.createElement('div');
+const GRID_TEXTS_COLOR = '#8E8E93';
+
+
+export function ChartBase(container, data, name) {
+  this.container = container;
+  this.chartContainer = document.createElement('div');
+
+  // console.log('create chart', container.getBoundingClientRect().height);
+
+  this.w = Math.min(container.getBoundingClientRect().width, CHART_MAX_WIDTH);
+  // this.h = Math.min(container.getBoundingClientRect().height, CHART_MAX_HEIGHT);
+  // console.log('h', this.h);
+  //
+  // this.h = Math.max(this.h, CHART_MIN_HEIGHT);
+  // console.log('h', this.h);
+  this.h = 400
+  this.name = name;
   // me.container.id = 'chart container';
-  this.container.style.width = w + 'px';
-  // this.container.style.height = h + 'px';
-  this.container.style.position = 'relative';
+  this.chartContainer.style.width = this.w + 'px';
+  // this.chartContainer.style.height = this.h + 'px';
+  this.chartContainer.style.position = 'relative';
 
-  this.canvas = document.createElement('canvas');
-  this.canvas.width = w;
-  this.canvas.height = h;
-  this.canvas.onmouseenter = this.onMouseEnter.bind(this);
-  this.container.append(this.canvas);
-  this.ctx = this.canvas.getContext('2d');
-
-  this.previewUI = preview(this.w - CHART_GRID_PADDING*2, PREVIEW_HEIGHT);
-  this.previewUI.style.position = 'absolute';
-  this.previewUI.style.top = h - PREVIEW_CHART_HEIGHT - PREVIEW_INNER_MARGIN_TOP + 'px';
-  this.previewUI.style.left = CHART_GRID_PADDING + 'px';
-  this.container.append(this.previewUI);
-  this.previewUI.onupdate = function(state) {
-    this.updateRange(state.left, state.right);
-  }.bind(this);
+  this.initHeader();
+  this.initCanvas();
+  this.initPreviewUI();
 
   this.previewUILeftX = 0.8;
   this.previewUIRightX = 1;
@@ -53,7 +67,105 @@ export function ChartBase(w, h, data) {
 
   this.initData();
   this.L = this.oxLabels.length - 1; // FIXME Rename
+
+  // console.log(window);
+  this.addListeners();
+
+  container.append(this.chartContainer);
 }
+
+ChartBase.prototype.addListeners = function () {
+  // window.addEventListener('resize', this.onResize.bind(this));
+};
+
+ChartBase.prototype.initCanvas = function () {
+  this.canvas = document.createElement('canvas');
+  this.canvas.width = this.w;
+  this.canvas.height = this.h;
+  this.canvas.onmouseenter = this.onMouseEnter.bind(this);
+  this.chartContainer.append(this.canvas);
+  this.ctx = this.canvas.getContext('2d');
+}
+
+ChartBase.prototype.initPreviewUI = function () {
+  this.previewUI = preview(this.w - CHART_GRID_PADDING*2, PREVIEW_HEIGHT);
+  this.previewUI.style.position = 'absolute';
+  // this.previewUI.style.top = this.h - PREVIEW_CHART_HEIGHT - PREVIEW_INNER_MARGIN_TOP + 'px';
+  this.previewUI.style.top = this.h - PREVIEW_INNER_MARGIN_TOP + 'px';
+  this.previewUI.style.left = CHART_GRID_PADDING + 'px';
+
+  this.previewUI.onupdate = function(state) {
+    this.updateRange(state.left, state.right);
+  }.bind(this);
+
+  this.chartContainer.append(this.previewUI);
+}
+
+ChartBase.prototype.updateWidth = function() {
+  this.chartContainer.style.width = this.w + 'px';
+  this.canvas.width = this.w;
+  this.previewUI.updateWidth(this.w - CHART_GRID_PADDING*2);
+
+  this.header.style.width = this.w - CHART_GRID_PADDING*2 + 'px';
+  this.gridWidth = this.w - CHART_GRID_PADDING*2;
+  this.countOnScreen = this.w/this.oxLabelWidth;
+  this.previewChartWidth = this.w - CHART_GRID_PADDING*2;
+  this.previewChartStep = Math.round((this.previewChartWidth/(this.L))*this.round)/this.round;
+  this.buttonsContainer.style.width = this.w - CHART_GRID_PADDING*2 + 'px';
+
+  this.needDrawPreview = true;
+  this.update();
+}
+
+ChartBase.prototype.updateHeight = function () {
+  this.previewUI.style.top = this.h - PREVIEW_CHART_HEIGHT - PREVIEW_INNER_MARGIN_TOP + 'px';
+  this.canvas.height = this.h;
+
+  this.bottomY = this.h - OXLABELS_HEIGHT - PREVIEW_CHART_HEIGHT - PREVIEW_CHART_MARGIN;
+  this.oxLabelsBottomY = this.h - PREVIEW_CHART_HEIGHT - PREVIEW_CHART_MARGIN;
+  this.previewChartY = this.h - PREVIEW_CHART_HEIGHT + 1;
+};
+
+ChartBase.prototype.onResize = debounce(function(e) {
+  var newWidth = this.container.getBoundingClientRect().width;
+  var newHeight = this.container.getBoundingClientRect().height;
+
+  console.log('resize', this.name);
+
+  newWidth = Math.min(newWidth, CHART_MAX_WIDTH);
+  newHeight = Math.min(newHeight, CHART_MAX_HEIGHT);
+  newHeight = Math.max(newHeight, CHART_MIN_HEIGHT);
+
+  if (newWidth !== this.w) {
+    this.w = newWidth;
+    this.updateWidth();
+  }
+
+  if (newHeight !== this.h) {
+    // this.h = newHeight;
+    // this.updateHeight();
+  }
+
+}, 20);
+
+ChartBase.prototype.initHeader = function () {
+  this.header = document.createElement('div');
+  this.header.classList.add('chart-header');
+  this.header.style.width = this.w - CHART_GRID_PADDING*2 + 'px';
+  this.header.style.height = CHART_HEADER_HEIGHT + 'px';
+  // header.style.marginLeft = CHART_GRID_PADDING + 'px';
+  this.header.style.margin = '0 0 ' + CHART_HEADER_MARGIN_BOTTOM + 'px ' + CHART_GRID_PADDING + 'px';
+
+  var title = document.createElement('h4');
+  title.innerHTML = this.name;
+  this.header.append(title);
+
+  this.dateRange = document.createElement('h5');
+  this.dateRange.innerHTML = 'Sat, 11 Apr 2020 - Mon, 12 Mar 2021';
+  this.header.append(this.dateRange);
+
+  this.chartContainer.append(this.header);
+};
 
 ChartBase.prototype.initData = function(dataLength=Number.POSITIVE_INFINITY) {
   this.oxLabels = getDataColumnByName('x', this.data.columns).slice(0, dataLength).map(date => createLabelFromDate(date));
@@ -131,12 +243,12 @@ ChartBase.prototype.initOyProps = function() {
   };
 }
 
-ChartBase.prototype.initPreviewChartProps = function(dataLength=this.L) {
+ChartBase.prototype.initPreviewChartProps = function() {
   this.previewChartX = CHART_GRID_PADDING;
   this.previewChartY = this.h - PREVIEW_CHART_HEIGHT + 1;
   this.previewChartWidth = this.w - CHART_GRID_PADDING*2;
   this.previewChartHeight = PREVIEW_CHART_HEIGHT;
-  this.previewChartStep = Math.round((this.previewChartWidth/(dataLength))*this.round)/this.round;
+  this.previewChartStep = Math.round((this.previewChartWidth/(this.L))*this.round)/this.round;
 }
 
 ChartBase.prototype.initInfo = function() {
@@ -144,7 +256,7 @@ ChartBase.prototype.initInfo = function() {
   for (var i = 0; i < this.columns.length; i++) {
     this.info.addRow(this.columns[i].name, 0, this.columns[i].color);
   }
-  this.container.append(this.info);
+  this.chartContainer.append(this.info);
 }
 
 // ChartBase.prototype.onCanvasClick = function(e) {
@@ -195,12 +307,16 @@ ChartBase.prototype.calculateOxLabelsOffsetX = function () {
 };
 
 ChartBase.prototype.drawOxLabels = function(oxLabelsProps, lastInd) {
+
   if (oxLabelsProps.alpha.value <= 0) return;
+
+  // if (this.name) console.log('draw ox', this.name);
+
   while(lastInd > this.endInd) lastInd -= oxLabelsProps.step;
 
   this.ctx.beginPath();
   this.ctx.globalAlpha = oxLabelsProps.alpha.value;
-  this.ctx.fillStyle = 'black'; // FIXME color to consts
+  this.ctx.fillStyle = GRID_TEXTS_COLOR;
 
   for (var i = lastInd; i >= this.startInd; i-=oxLabelsProps.step) {
     this.ctx.fillText(this.oxLabels[i], Math.floor(i * this.barWidth + this.oxLabelsOffsetX), this.oxLabelsBottomY - OXLABELS_HEIGHT/2);
@@ -208,12 +324,22 @@ ChartBase.prototype.drawOxLabels = function(oxLabelsProps, lastInd) {
 }
 
 ChartBase.prototype.updateOxLabels = function() {
+
+
   var step = Math.max(1, (this.endInd - this.startInd + 1) / this.countOnScreen); // FIXME если range не изменился, то и сюда не надо
   var p = 1;
   while (step > p) p *= 2;
   step = p;
 
-  if (step === this.currOxLabelsStep) return;
+  if (step === this.currOxLabelsStep) return false;
+
+  if (this.name === 'stacked bar') {
+    console.log('update ox', this.name);
+    console.log('step', step);
+    console.log('curr step', this.currOxLabelsStep);
+  }
+
+
 
   var now = performance.now();
 
@@ -231,13 +357,16 @@ ChartBase.prototype.updateOxLabels = function() {
     this.dynamicOxLabels.step = this.currOxLabelsStep;
     this.currOxLabelsStep /= 2;
   }
+
+  // this.draw();
+  return true;
 }
 
 ChartBase.prototype.drawOyLabels = function(oyLabels) {
   if (oyLabels.alpha.value <= 0) return;
   this.ctx.globalAlpha = oyLabels.alpha.value;
-  this.ctx.strokeStyle = 'black'; // FIXME color to const
-  this.ctx.fillStyle = 'black'; // FIXME color to const
+  this.ctx.strokeStyle = GRID_LINES_COLOR;
+  this.ctx.fillStyle = GRID_TEXTS_COLOR;
   this.ctx.lineWidth = 1;
   this.ctx.beginPath();
 
@@ -260,43 +389,50 @@ ChartBase.prototype.drawOyLabels = function(oyLabels) {
   this.ctx.stroke();
 }
 
-ChartBase.prototype.xToInd = function(x) {
-
-
-  console.log('=======================');
-  console.log('x', x/this.barWidth);
-  console.log('floor', Math.floor(x/this.barWidth));
-  console.log('ceil', Math.ceil(x/this.barWidth));
-  console.log('round', Math.round(x/this.barWidth));
-
-
-  var indOnScreen = Math.round(x/this.barWidth);
-  var ind = this.startInd + indOnScreen;
-  return ind;
-}
+// ChartBase.prototype.xToInd = function(x) {
+//
+//
+//   console.log('=======================');
+//   console.log('x', x/this.barWidth);
+//   console.log('floor', Math.floor(x/this.barWidth));
+//   console.log('ceil', Math.ceil(x/this.barWidth));
+//   console.log('round', Math.round(x/this.barWidth));
+//
+//
+//   var indOnScreen = Math.round(x/this.barWidth);
+//   var ind = this.startInd + indOnScreen;
+//   return ind;
+// }
 
 ChartBase.prototype.initButtons = function() {
-  var buttonsContainer = document.createElement('div')
-  // for (var i = 0; i < this.columnNames.length; i++) {
+  this.buttonsContainer = document.createElement('div');
+  this.buttonsContainer.style.width = this.w - CHART_GRID_PADDING*2 + 'px';
+  this.buttonsContainer.style.marginLeft = CHART_GRID_PADDING + 'px';
+  this.buttonsContainer.classList.add('buttons-container');
+
   for (var i = 0; i < this.columns.length; i++) {
     var b = createButton(this.columns[i].color, this.columns[i].name, function(name, isOn) {
       this.buttonClicked(name, isOn);
     }.bind(this));
-    buttonsContainer.append(b);
+    this.buttonsContainer.append(b);
   }
-  this.container.append(buttonsContainer);
+
+  this.chartContainer.append(this.buttonsContainer);
 }
 
 ChartBase.prototype.buttonClicked = function() {}
 
 ChartBase.prototype.draw = function() {
   requestAnimationFrame(function() {
+
     // this.ctx.clearRect(0, 0, this.w, this.oxLabelsBottomY);
     this.ctx.clearRect(0, 0, this.w, this.previewChartY);
 
-    this.ctx.beginPath();
-    this.ctx.rect(0, 0, this.w, this.bottomY);
-    this.ctx.stroke()
+    // this.ctx.beginPath();
+    // this.ctx.rect(0, 0, this.w, this.bottomY);
+    // this.ctx.stroke()
+
+    this.updateOxLabels();
 
     var now = performance.now();
 
@@ -324,6 +460,22 @@ ChartBase.prototype.drawSequence = function() {
   this.drawSelected();
 }
 
+
+ChartBase.prototype.drawSelectedChartContent = function () {}
+
+ChartBase.prototype.drawSelected = function() {
+  if (this.selectedInd >= 0) {
+    this.drawSelectedChartContent();
+
+    this.info.style.left = Math.max(this.selectedScreenX - this.info.offsetWidth - 30, 0) + 'px'; // FIXME this.info margin
+    this.info.style.top = Math.max(this.selectedScreenY - this.info.offsetHeight, 0) + 'px';
+    this.info.appear();
+  }
+  else {
+    this.info.disappear()
+  }
+}
+
 ChartBase.prototype.checkRedrawBg = function(now) {
   if (this.gridMaxY.nextTick(now)) this.needRedraw = true;
   if (this.oldOyLabels.alpha.nextTick(now)) this.needRedraw = true;
@@ -346,6 +498,7 @@ ChartBase.prototype.clearDrawPreview = function() {
 }
 
 ChartBase.prototype.calculateValuesMaxY = function() {
+  var t = getMatrixMax(this.columns.filter(c => c.isOn).map(c => c.values.slice(this.startInd, this.endInd+1)));
   return getMatrixMax(this.columns.filter(c => c.isOn).map(c => c.values.slice(this.startInd, this.endInd+1)));
 }
 
@@ -356,6 +509,7 @@ ChartBase.prototype.updateY = function () {
   if (this.gridStepY !== newGridStepY) {
     var now = performance.now();
 
+    // console.log('new grid step', newGridStepY)
     this.gridMaxY.set(newGridStepY*6, now, true);
 
     if (
@@ -386,7 +540,7 @@ ChartBase.prototype.update = function() {
   this.offsetX = calculateOffsetX(this.gridWidth, CHART_GRID_PADDING, this.previewUILeftX, this.previewUIRightX);
 
   this.calculateOxLabelsOffsetX();
-  this.updateOxLabels();
+  // this.updateOxLabels();
 
   this.updateY();
 
@@ -400,7 +554,9 @@ ChartBase.prototype.onMouseEnter = function(e) {
 
 ChartBase.prototype.onMouseMove = function (e) {
   if (e.layerY <= this.bottomY) {
-    this.select(e.layerX, e.layerY)
+    if (e.layerX > CHART_GRID_PADDING && e.layerX < this.w - CHART_GRID_PADDING) {
+      this.select(e.layerX, e.layerY)
+    }
   }
   else {
     this.selectedInd = -1;
