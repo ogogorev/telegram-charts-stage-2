@@ -55,22 +55,11 @@ function ChartBase(container, data, name) {
   this.chartContainer = document.createElement('div');
   this.chartContainer.classList.add('chart');
 
-  // console.log('create chart', container.getBoundingClientRect().height);
-
   this.w = Math.min(container.getBoundingClientRect().width, CHART_MAX_WIDTH);
-  // this.h = Math.min(container.getBoundingClientRect().height, CHART_MAX_HEIGHT);
-  // console.log('h', this.h);
-  //
-  // this.h = Math.max(this.h, CHART_MIN_HEIGHT);
-  // console.log('h', this.h);
   this.h = 400
   this.name = name;
-  // me.container.id = 'chart container';
   this.chartContainer.style.width = this.w + 'px';
-  // this.chartContainer.style.height = this.h + 'px';
   this.chartContainer.style.position = 'relative';
-
-  console.log('this', this);
 
   this.initHeader();
   this.initCanvas();
@@ -85,9 +74,8 @@ function ChartBase(container, data, name) {
   this.round = 1000;
 
   this.initData();
-  this.L = this.oxLabels.length - 1; // FIXME Rename
+  this.L = this.oxLabels.length - 1;
 
-  // console.log(window);
   this.addListeners();
 
   container.append(this.chartContainer);
@@ -131,7 +119,6 @@ ChartBase.prototype.initCanvas = function () {
 ChartBase.prototype.initPreviewUI = function () {
   this.previewUI = preview(this.w - CHART_GRID_PADDING*2, PREVIEW_HEIGHT);
   this.previewUI.style.position = 'absolute';
-  // this.previewUI.style.top = this.h - PREVIEW_CHART_HEIGHT - PREVIEW_INNER_MARGIN_TOP + 'px';
   this.previewUI.style.top = this.h - PREVIEW_INNER_MARGIN_TOP + 'px';
   this.previewUI.style.left = CHART_GRID_PADDING + 'px';
 
@@ -152,7 +139,9 @@ ChartBase.prototype.updateWidth = function() {
   this.countOnScreen = this.w/this.oxLabelWidth;
   this.previewChartWidth = this.w - CHART_GRID_PADDING*2;
   this.previewChartStep = Math.round((this.previewChartWidth/(this.L))*this.round)/this.round;
-  this.buttonsContainer.style.width = this.w - CHART_GRID_PADDING*2 + 'px';
+  if (this.buttonsContainer) {
+    this.buttonsContainer.style.width = this.w - CHART_GRID_PADDING*2 + 'px';
+  }
 
   this.needDrawPreview = true;
   this.update();
@@ -171,8 +160,6 @@ ChartBase.prototype.onResize = debounce(function(e) {
   var newWidth = this.container.getBoundingClientRect().width;
   var newHeight = this.container.getBoundingClientRect().height;
 
-  console.log('resize', this.name);
-
   newWidth = Math.min(newWidth, CHART_MAX_WIDTH);
   newHeight = Math.min(newHeight, CHART_MAX_HEIGHT);
   newHeight = Math.max(newHeight, CHART_MIN_HEIGHT);
@@ -182,10 +169,7 @@ ChartBase.prototype.onResize = debounce(function(e) {
     this.updateWidth();
   }
 
-  if (newHeight !== this.h) {
-    // this.h = newHeight;
-    // this.updateHeight();
-  }
+  if (newHeight !== this.h) {}
 
 }, 20);
 
@@ -194,7 +178,6 @@ ChartBase.prototype.initHeader = function () {
   this.header.classList.add('chart-header');
   this.header.style.width = this.w - CHART_GRID_PADDING*2 + 'px';
   this.header.style.height = CHART_HEADER_HEIGHT + 'px';
-  // header.style.marginLeft = CHART_GRID_PADDING + 'px';
   this.header.style.margin = '0 0 ' + CHART_HEADER_MARGIN_BOTTOM + 'px ' + CHART_GRID_PADDING + 'px';
 
   var title = document.createElement('h4');
@@ -202,7 +185,6 @@ ChartBase.prototype.initHeader = function () {
   this.header.append(title);
 
   this.dateRange = document.createElement('h5');
-  // this.dateRange.id = this.name + 'date-range';
   this.dateRange.innerHTML = 'Sat, 11 Apr 2020 - Mon, 12 Mar 2021';
   this.header.append(this.dateRange);
 
@@ -217,7 +199,7 @@ ChartBase.prototype.initData = function(dataLength=Number.POSITIVE_INFINITY) {
   this.dateColumn = getDataColumnByName('x', this.data.columns);
   this.oxLabels = this.dateColumn.slice(0, dataLength).map(date => createLabelFromDate(date));
 
-  this.columnNames = Object.keys(this.data.names); // FIXME Remove
+  this.columnNames = Object.keys(this.data.names);
   this.columns = [];
   for (var i = 0; i < this.columnNames.length; i++) {
     this.columns.push({
@@ -237,7 +219,6 @@ ChartBase.prototype.init = function() {
   this.initOyProps();
   this.initPreviewChartProps();
 
-  // this.drawpreview();
   this.initInfo();
   this.initButtons();
   this.update();
@@ -246,15 +227,17 @@ ChartBase.prototype.init = function() {
 ChartBase.prototype.initDrawProps = function() {
   this.initColors(CHART_DAY_THEME);
 
-  this.bottomY = this.h - OXLABELS_HEIGHT - PREVIEW_CHART_HEIGHT - PREVIEW_CHART_MARGIN; // FIXME rename to mainChartY
-  this.oxLabelsBottomY = this.h - PREVIEW_CHART_HEIGHT - PREVIEW_CHART_MARGIN; // FIXME rename to oxLabelsY
+  this.drawIndOffset = 10;
+
+  this.bottomY = this.h - OXLABELS_HEIGHT - PREVIEW_CHART_HEIGHT - PREVIEW_CHART_MARGIN;
+  this.oxLabelsBottomY = this.h - PREVIEW_CHART_HEIGHT - PREVIEW_CHART_MARGIN;
 
   this.needRedraw = false;
   this.needDrawPreview = true;
 
   this.gridWidth = this.w - CHART_GRID_PADDING*2;
 
-  this.barWidth = 0; // FIXME rename to step
+  this.barWidth = 0;
   this.offsetX = 0;
 
   this.startInd = 0;
@@ -266,7 +249,7 @@ ChartBase.prototype.initDrawProps = function() {
 
 ChartBase.prototype.initOxProps = function() {
   this.oxLabelWidth = 50;
-  this.labelWidthHalf = 15; // FIXME Rename
+  this.labelWidthHalf = 15;
   this.oxLabelsOffsetX = 0;
 
   this.countOnScreen = this.w/this.oxLabelWidth;
@@ -308,16 +291,6 @@ ChartBase.prototype.initInfo = function() {
   this.chartContainer.append(this.info);
 }
 
-// ChartBase.prototype.onCanvasClick = function(e) {
-//   if (e.layerY <= this.bottomY) {
-//     select(e.layerX)
-//   }
-//   else {
-//     this.selectedInd = -1;
-//   }
-//   this.draw();
-// };
-
 ChartBase.prototype.select = function(x, y) {
   this.selectedScreenX = x;
   this.selectedScreenY = y;
@@ -336,7 +309,7 @@ ChartBase.prototype.updateRange = function(left, right) {
 
 ChartBase.prototype.drawBg = function() {
   this.drawOxLabels(this.staticOxLabels, this.oxLabels.length - 1);
-  this.drawOxLabels(this.dynamicOxLabels, this.oxLabels.length - 1 - this.dynamicOxLabels.step/2); // Говно какое-то
+  this.drawOxLabels(this.dynamicOxLabels, this.oxLabels.length - 1 - Math.floor(this.dynamicOxLabels.step/2));
   this.drawOyLabels(this.oldOyLabels);
   this.drawOyLabels(this.newOyLabels);
   this.drawZeroLine();
@@ -359,8 +332,6 @@ ChartBase.prototype.drawOxLabels = function(oxLabelsProps, lastInd) {
 
   if (oxLabelsProps.alpha.value <= 0) return;
 
-  // if (this.name) console.log('draw ox', this.name);
-
   while(lastInd > this.endInd) lastInd -= oxLabelsProps.step;
 
   this.ctx.beginPath();
@@ -373,21 +344,12 @@ ChartBase.prototype.drawOxLabels = function(oxLabelsProps, lastInd) {
 }
 
 ChartBase.prototype.updateOxLabels = function() {
-
-
-  var step = Math.max(1, (this.endInd - this.startInd + 1) / this.countOnScreen); // FIXME если range не изменился, то и сюда не надо
+  var step = Math.max(1, (this.endInd - this.startInd + 1) / this.countOnScreen);
   var p = 1;
   while (step > p) p *= 2;
   step = p;
 
   if (step === this.currOxLabelsStep) return false;
-
-  if (this.name === 'stacked bar') {
-    console.log('update ox', this.name);
-    console.log('step', step);
-    console.log('curr step', this.currOxLabelsStep);
-  }
-
 
 
   var now = performance.now();
@@ -407,7 +369,6 @@ ChartBase.prototype.updateOxLabels = function() {
     this.currOxLabelsStep /= 2;
   }
 
-  // this.draw();
   return true;
 }
 
@@ -438,21 +399,6 @@ ChartBase.prototype.drawOyLabels = function(oyLabels) {
   this.ctx.stroke();
 }
 
-// ChartBase.prototype.xToInd = function(x) {
-//
-//
-//   console.log('=======================');
-//   console.log('x', x/this.barWidth);
-//   console.log('floor', Math.floor(x/this.barWidth));
-//   console.log('ceil', Math.ceil(x/this.barWidth));
-//   console.log('round', Math.round(x/this.barWidth));
-//
-//
-//   var indOnScreen = Math.round(x/this.barWidth);
-//   var ind = this.startInd + indOnScreen;
-//   return ind;
-// }
-
 ChartBase.prototype.initButtons = function() {
   this.buttonsContainer = document.createElement('div');
   this.buttonsContainer.style.width = this.w - CHART_GRID_PADDING*2 + 'px';
@@ -473,14 +419,7 @@ ChartBase.prototype.buttonClicked = function() {}
 
 ChartBase.prototype.draw = function() {
   requestAnimationFrame(function() {
-
-    // this.ctx.clearRect(0, 0, this.w, this.oxLabelsBottomY);
     this.ctx.clearRect(0, 0, this.w, this.previewChartY);
-
-    // this.ctx.beginPath();
-    // this.ctx.strokeStyle = '#000000'
-    // this.ctx.rect(0, 0, this.w, this.bottomY);
-    // this.ctx.stroke()
 
     if (this.updateOxLabels()) this.needRedraw = true;
 
@@ -517,7 +456,7 @@ ChartBase.prototype.drawSelected = function() {
   if (this.selectedInd >= 0) {
     this.drawSelectedChartContent();
 
-    this.info.style.left = Math.max(this.selectedScreenX - this.info.offsetWidth - 30, 0) + 'px'; // FIXME this.info margin
+    this.info.style.left = Math.max(this.selectedScreenX - this.info.offsetWidth - 30, 0) + 'px';
     this.info.style.top = Math.max(this.selectedScreenY - this.info.offsetHeight, 0) + 'px';
     this.info.appear();
   }
@@ -559,7 +498,6 @@ ChartBase.prototype.updateY = function () {
   if (this.gridStepY !== newGridStepY) {
     var now = performance.now();
 
-    // console.log('new grid step', newGridStepY)
     this.gridMaxY.set(newGridStepY*6, now, true);
 
     if (
@@ -583,17 +521,13 @@ ChartBase.prototype.updateY = function () {
 };
 
 ChartBase.prototype.update = function() {
-  // startInd = Math.floor(me.previewUILeftX * L);
   this.startInd = Math.max(Math.ceil(this.previewUILeftX * this.L) - 1, 0);
   this.endInd = Math.ceil(this.previewUIRightX * this.L);
   this.barWidth = this.gridWidth/(this.L*(this.previewUIRightX-this.previewUILeftX));
   this.offsetX = calculateOffsetX(this.gridWidth, CHART_GRID_PADDING, this.previewUILeftX, this.previewUIRightX);
 
   this.updateDateRange();
-
   this.calculateOxLabelsOffsetX();
-  // this.updateOxLabels();
-
   this.updateY();
 
   this.draw();
@@ -662,7 +596,6 @@ function lineChart(container, data, name) {
 }
 
 function LineChart(container, data) {
-  console.log(data);
   ChartBase.apply(this, arguments);
   this.init();
 }
@@ -678,7 +611,6 @@ LineChart.prototype.onResize = debounce(function(e) {
   var newWidth = this.container.getBoundingClientRect().width;
   var newHeight = this.container.getBoundingClientRect().height;
 
-  console.log('resize', this.name);
 
   newWidth = Math.min(newWidth, CHART_MAX_WIDTH);
   newHeight = Math.min(newHeight, CHART_MAX_HEIGHT);
@@ -689,10 +621,7 @@ LineChart.prototype.onResize = debounce(function(e) {
     this.updateWidth();
   }
 
-  if (newHeight !== this.h) {
-    // this.h = newHeight;
-    // this.updateHeight();
-  }
+  if (newHeight !== this.h) {}
 
 }, 20);
 
@@ -740,8 +669,8 @@ LineChart.prototype.checkRedrawChartsContent = function(now) {
 
 LineChart.prototype.drawChartContent = function() {
   var barW = Math.round(this.barWidth*this.round)/this.round;
-  var sI = Math.max(this.startInd-1, 0);
-  var eI = Math.min(this.endInd+1, this.L);
+  var sI = Math.max(this.startInd - this.drawIndOffset, 0);
+  var eI = Math.min(this.endInd + this.drawIndOffset, this.L);
 
   var X = [];
   for (var i = sI; i < eI+1; i++) {
@@ -750,10 +679,6 @@ LineChart.prototype.drawChartContent = function() {
 
   for (var i = 0; i < this.columns.length; i++) {
     var Y = getYCoords(this.bottomY, this.columns[i].values.slice(sI, eI+1), this.getGridMaxForColumn(this.columns[i]));
-
-    // console.log('draw', this.columns[i].values.slice(sI, eI+1));
-    // console.log('line draw max', this.getGridMaxForColumn(this.columns[i]));
-
     this.drawLine(X, Y, this.columns[i].color, this.columns[i].alpha.value);
   }
 }
@@ -779,13 +704,10 @@ LineChart.prototype.drawLine = function(X, Y, color, alpha=1) {
 }
 
 LineChart.prototype.drawSelectedChartContent = function() {
-  // if (this.selectedInd > 0) {
-
     var barW = Math.round(this.barWidth*this.round)/this.round;
     var selectedIndX = Math.floor(this.getScreenXByInd(this.selectedInd, barW));
     var maxScreenY = 0;
 
-    // console.log('selected');
 
     var ind = this.selectedInd - this.startInd;
     var filteredColumns = this.columns.filter(c => c.isOn);
@@ -799,7 +721,7 @@ LineChart.prototype.drawSelectedChartContent = function() {
     this.ctx.stroke();
 
     this.ctx.beginPath();
-    this.ctx.fillStyle = '#FFFFFF'; // FIXME Color
+    this.ctx.fillStyle = '#FFFFFF';
     filteredColumns.forEach(c => {
       var y = Math.floor(getScreenY(this.bottomY, c.values[this.selectedInd], this.getGridMaxForColumn(c)));
       if (y > maxScreenY) maxScreenY = y;
@@ -807,7 +729,7 @@ LineChart.prototype.drawSelectedChartContent = function() {
       this.ctx.arc(
         selectedIndX,
         y,
-        5.5, // FIXME Radius to const
+        5.5,
         0,
         2 * Math.PI
       );
@@ -817,7 +739,7 @@ LineChart.prototype.drawSelectedChartContent = function() {
     filteredColumns.forEach(c => {
       this.ctx.beginPath();
       this.ctx.lineWidth = 2;
-      this.ctx.strokeStyle = this.data.colors[c.id]; // FIXME Color
+      this.ctx.strokeStyle = this.data.colors[c.id];
       this.ctx.arc(
         selectedIndX,
         Math.floor(getScreenY(this.bottomY, c.values[this.selectedInd], this.getGridMaxForColumn(c))),
@@ -828,14 +750,6 @@ LineChart.prototype.drawSelectedChartContent = function() {
       this.ctx.stroke();
       this.ctx.closePath();
     });
-
-    // this.info.style.left = Math.max(this.selectedScreenX - this.info.offsetWidth - 30, 0) + 'px'; // FIXME this.info margin
-    // this.info.style.top = Math.max(this.selectedScreenY - this.info.offsetHeight, 0) + 'px';
-    // this.info.appear();
-  // }
-  // else {
-  //   this.info.disappear()
-  // }
 }
 
 LineChart.prototype.getGridMaxForColumnPreview = function(column) {
@@ -849,13 +763,12 @@ LineChart.prototype.drawPreview = function() {
   for (var i = 0; i < this.oxLabels.length; i++) {
     X.push(getScreenXByInd(i, this.previewChartStep, this.previewChartX));
   }
-  X[0] = Math.ceil(X[0]);
-  X[X.length-1] = Math.floor(X[X.length-1]);
+  X[0] += 1
+  X[X.length-1] -= 1;
 
   this.ctx.beginPath();
   for (var i = 0; i < this.columns.length; i++) {
     var Y = getYCoords(this.previewChartHeight, this.columns[i].values, this.getGridMaxForColumnPreview(this.columns[i]))
-    // .map(y => this.previewChartY + y);
     .map(y => Math.max(this.previewChartY + y, this.previewChartY));
 
     this.drawLine(X, Y, this.columns[i].color, this.columns[i].alpha.value);
@@ -868,9 +781,7 @@ function twoAxesLineChart(container, data, name) {
 }
 
 function TwoAxesLineChart(container, data) {
-  // console.log(data);
   LineChart.apply(this, arguments);
-  // this.init();
 }
 
 TwoAxesLineChart.prototype = Object.create(LineChart.prototype);
@@ -884,8 +795,6 @@ TwoAxesLineChart.prototype.onResize = debounce(function(e) {
   var newWidth = this.container.getBoundingClientRect().width;
   var newHeight = this.container.getBoundingClientRect().height;
 
-  console.log('resize', this.name);
-
   newWidth = Math.min(newWidth, CHART_MAX_WIDTH);
   newHeight = Math.min(newHeight, CHART_MAX_HEIGHT);
   newHeight = Math.max(newHeight, CHART_MIN_HEIGHT);
@@ -896,8 +805,6 @@ TwoAxesLineChart.prototype.onResize = debounce(function(e) {
   }
 
   if (newHeight !== this.h) {
-    // this.h = newHeight;
-    // this.updateHeight();
   }
 
 }, 20)
@@ -923,8 +830,24 @@ TwoAxesLineChart.prototype.checkRedrawChartsContent = function(now) {
   if (this.gridPreviewMaxYRight.nextTick(now)) this.needDrawPreview = true;
 }
 
+TwoAxesLineChart.prototype.drawZeroLine = function () {
+  this.ctx.beginPath();
+  this.ctx.globalAlpha = 1;
+
+  this.ctx.fillStyle = this.columns[0].color;
+  this.ctx.fillText(0, CHART_GRID_PADDING, this.bottomY + OY_LABELS_MARGIN_TOP);
+  this.ctx.fillStyle = this.columns[1].color;
+  this.ctx.fillText(
+    0,
+    CHART_GRID_PADDING + this.gridWidth - this.ctx.measureText(0).width,
+    this.bottomY + OY_LABELS_MARGIN_TOP
+  );
+  this.ctx.moveTo(CHART_GRID_PADDING, this.bottomY + 0.5);
+  this.ctx.lineTo(this.w - CHART_GRID_PADDING, this.bottomY + 0.5);
+  this.ctx.stroke();
+};
+
 TwoAxesLineChart.prototype.drawOyLabels = function(oyLabels) {
-  // if (oyLabels.alpha.value <= 0 && oyLabels.alphaRight.value <= 0) return;
   if (oyLabels.alpha.value > 0) {
     this.ctx.fillStyle = this.columns[0].color;
     this.ctx.globalAlpha = oyLabels.alpha.value;
@@ -941,20 +864,20 @@ TwoAxesLineChart.prototype.drawOyLabels = function(oyLabels) {
         y + OY_LABELS_MARGIN_TOP
       );
     }
-
-    this.ctx.beginPath();
-    this.ctx.globalAlpha = 1;
-    this.ctx.lineWidth = 1;
-    this.ctx.strokeStyle = this.gridLinesColor;
-    for (var i = 1; i < 6; i++) {
-      var y = (oyLabels.labels.length - i) * this.gridLinesHeight;
-
-      y -= 0.5;
-      this.ctx.moveTo(CHART_GRID_PADDING, y);
-      this.ctx.lineTo(this.w - CHART_GRID_PADDING, y);
-    }
-    this.ctx.stroke();
   }
+
+  this.ctx.beginPath();
+  this.ctx.globalAlpha = 1;
+  this.ctx.lineWidth = 1;
+  this.ctx.strokeStyle = this.gridLinesColor;
+  for (var i = 1; i < 6; i++) {
+    var y = (oyLabels.labels.length - i) * this.gridLinesHeight;
+
+    y -= 0.5;
+    this.ctx.moveTo(CHART_GRID_PADDING, y);
+    this.ctx.lineTo(this.w - CHART_GRID_PADDING, y);
+  }
+  this.ctx.stroke();
 
   if (oyLabels.alphaRight.value > 0) {
     this.ctx.fillStyle = this.columns[1].color;
@@ -984,8 +907,8 @@ TwoAxesLineChart.prototype.checkRedrawBg = function(now) {
 }
 
 TwoAxesLineChart.prototype.updateY = function () {
-  var maxY = getMax(this.columns[0].values.slice(this.startInd, this.endInd+1));
-  var maxYRight = getMax(this.columns[1].values.slice(this.startInd, this.endInd+1));
+  var maxY = (this.columns[0].isOn) ? getMax(this.columns[0].values.slice(this.startInd, this.endInd+1)) : 0;
+  var maxYRight = (this.columns[1].isOn) ? getMax(this.columns[1].values.slice(this.startInd, this.endInd+1)) : 0;
   var newGridStepY = getStepForGridValues(maxY);
   var newGridStepYRight = getStepForGridValues(maxYRight);
 
@@ -1010,7 +933,7 @@ TwoAxesLineChart.prototype.updateY = function () {
     this.newOyLabels.alpha.set(1, now, true);
 
     this.oldOyLabels.labels = this.newOyLabels.labels;
-    this.newOyLabels.labels = [0, 1, 2, 3, 4, 5].map(n => n*newGridStepY);
+    this.newOyLabels.labels = (maxY !== 0) ? [0, 1, 2, 3, 4, 5].map(n => n*newGridStepY) : 0;
   }
 
   if (this.gridStepYRight !== newGridStepYRight) {
@@ -1025,7 +948,7 @@ TwoAxesLineChart.prototype.updateY = function () {
     this.newOyLabels.alphaRight.set(1, now, true);
 
     this.oldOyLabels.labelsRight = this.newOyLabels.labelsRight;
-    this.newOyLabels.labelsRight = [0, 1, 2, 3, 4, 5].map(n => n*newGridStepYRight);
+    this.newOyLabels.labelsRight = (maxYRight !== 0) ? [0, 1, 2, 3, 4, 5].map(n => n*newGridStepYRight) : [0];
   }
 }
 
@@ -1043,11 +966,9 @@ function barChart(container, data, name) {
 }
 
 function BarChart(container, data) {
-  console.log(data);
   ChartBase.apply(this, arguments);
   this.L++;
   this.init();
-
 }
 
 BarChart.prototype = Object.create(ChartBase.prototype);
@@ -1065,8 +986,6 @@ BarChart.prototype.onResize = debounce(function(e) {
   var newWidth = this.container.getBoundingClientRect().width;
   var newHeight = this.container.getBoundingClientRect().height;
 
-  console.log('resize', this.name);
-
   newWidth = Math.min(newWidth, CHART_MAX_WIDTH);
   newHeight = Math.min(newHeight, CHART_MAX_HEIGHT);
   newHeight = Math.max(newHeight, CHART_MIN_HEIGHT);
@@ -1076,10 +995,7 @@ BarChart.prototype.onResize = debounce(function(e) {
     this.updateWidth();
   }
 
-  if (newHeight !== this.h) {
-    // this.h = newHeight;
-    // this.updateHeight();
-  }
+  if (newHeight !== this.h) {}
 
 }, 20);
 
@@ -1099,7 +1015,7 @@ BarChart.prototype.drawPreview = function() {
   this.ctx.clearRect(this.previewChartX, this.previewChartY, this.previewChartWidth, this.previewChartHeight);
 
   this.ctx.beginPath();
-  this.ctx.globalAlpha = 1; // FIXME Alpha to const
+  this.ctx.globalAlpha = 1;
   this.ctx.fillStyle = this.columns[0].color;
 
   var X = [];
@@ -1126,10 +1042,10 @@ BarChart.prototype.initButtons = function () {};
 
 BarChart.prototype.drawChartContent = function() {
   this.ctx.beginPath();
-  this.ctx.globalAlpha = (this.selectedInd > -1) ? 0.6 : 1; // FIXME Alpha to const
+  this.ctx.globalAlpha = (this.selectedInd > -1) ? 0.6 : 1;
   var barW = Math.round(this.barWidth*this.round)/this.round;
-  var sI = Math.max(this.startInd-1, 0);
-  var eI = Math.min(this.endInd+1, this.L);
+  var sI = Math.max(this.startInd - this.drawIndOffset, 0);
+  var eI = Math.min(this.endInd + this.drawIndOffset, this.L);
 
   var X = [];
   for (var i = sI; i < eI+1; i++) {
@@ -1156,9 +1072,7 @@ BarChart.prototype.getIndByScreenX = function (x, step=this.barWidth, offset=thi
 
 BarChart.prototype.drawSelected = function() {
   if (this.selectedInd >= 0) {
-    // this.drawSelectedChartContent();
-
-    this.info.style.left = Math.max(this.selectedScreenX - this.info.offsetWidth - 30, 0) + 'px'; // FIXME this.info margin
+    this.info.style.left = Math.max(this.selectedScreenX - this.info.offsetWidth - 30, 0) + 'px';
     this.info.style.top = Math.max(this.selectedScreenY - this.info.offsetHeight, 0) + 'px';
     this.info.appear();
   }
@@ -1186,38 +1100,11 @@ function stackedBarChart(container, data, name) {
 }
 
 function StackedBarChart(container, data) {
-  // console.log(data);
   BarChart.apply(this, arguments);
-  // this.L++;
-  // this.init();
-
 }
 
 StackedBarChart.prototype = Object.create(BarChart.prototype);
 StackedBarChart.prototype.constructor = StackedBarChart;
-// StackedBarChart.prototype.initCanvas = BarChart.prototype.initCanvas;
-
-// console.log('stack', BarChart.prototype.initCanvas);
-
-// StackedBarChart.prototype.initHeader = function () {
-//   this.header = document.createElement('div');
-//   this.header.classList.add('chart-header');
-//   this.header.style.width = this.w - CHART_GRID_PADDING*2 + 'px';
-//   this.header.style.height = CHART_HEADER_HEIGHT + 'px';
-//   // header.style.marginLeft = CHART_GRID_PADDING + 'px';
-//   this.header.style.margin = '0 0 ' + CHART_HEADER_MARGIN_BOTTOM + 'px ' + CHART_GRID_PADDING + 'px';
-//
-//   var title = document.createElement('h4');
-//   title.innerHTML = this.name;
-//   this.header.append(title);
-//
-//   this.dateRange = document.createElement('h5');
-//   // this.dateRange.id = this.name + 'date-range';
-//   this.dateRange.innerHTML = 'Sat, 11 Apr 2020 - Mon, 12 Mar 2021';
-//   this.header.append(this.dateRange);
-//
-//   this.chartContainer.append(this.header);
-// }
 
 StackedBarChart.prototype.addListeners = function () {
   window.addEventListener('resize', this.onResize.bind(this));
@@ -1226,8 +1113,6 @@ StackedBarChart.prototype.addListeners = function () {
 StackedBarChart.prototype.onResize = debounce(function(e) {
   var newWidth = this.container.getBoundingClientRect().width;
   var newHeight = this.container.getBoundingClientRect().height;
-
-  console.log('resize', this.name);
 
   newWidth = Math.min(newWidth, CHART_MAX_WIDTH);
   newHeight = Math.min(newHeight, CHART_MAX_HEIGHT);
@@ -1238,10 +1123,7 @@ StackedBarChart.prototype.onResize = debounce(function(e) {
     this.updateWidth();
   }
 
-  if (newHeight !== this.h) {
-    // this.h = newHeight;
-    // this.updateHeight();
-  }
+  if (newHeight !== this.h) {}
 
 }, 20);
 
@@ -1257,6 +1139,11 @@ StackedBarChart.prototype.initData = function() {
   ));
 
   this.updateStackedColumns();
+}
+
+StackedBarChart.prototype.initInfo = function() {
+  ChartBase.prototype.initInfo.apply(this);
+  this.info.addRow('All', 0, '#000000');
 }
 
 StackedBarChart.prototype.updateStackedColumns = function() {
@@ -1297,6 +1184,14 @@ StackedBarChart.prototype.buttonClicked = function(name, isOn) {
       if (isOn) this.info.enableRow(this.columns[i].name);
       else this.info.disableRow(this.columns[i].name);
       this.updateStackedColumns();
+
+      if (this.columns.filter(c => c.isOn).length < 1) {
+        this.info.disableRow('All')
+      }
+      else {
+        this.info.enableRow('All')
+      }
+
       this.gridPreviewMaxY.set(Math.max(this.calculateGridPreviewMaxY(), 0), now, true);
       this.update();
     }
@@ -1323,8 +1218,8 @@ StackedBarChart.prototype.checkRedrawChartsContent = function(now) {
 
 StackedBarChart.prototype.drawChartContent = function() {
   var barW = Math.round(this.barWidth*this.round)/this.round;
-  var sI = Math.max(this.startInd-1, 0);
-  var eI = Math.min(this.endInd+1, this.L);
+  var sI = Math.max(this.startInd - this.drawIndOffset, 0);
+  var eI = Math.min(this.endInd + this.drawIndOffset, this.L);
 
   var X = [];
   for (var i = sI; i < eI+1; i++) {
@@ -1335,7 +1230,7 @@ StackedBarChart.prototype.drawChartContent = function() {
     .map(c => getYCoords(this.bottomY, c.map(v => v.value), this.gridMaxY.value));
   YCoords.splice(0, 0, YCoords[1].map(c => this.bottomY));
 
-  this.ctx.globalAlpha = (this.selectedInd > -1) ? 0.6 : 1; // FIXME Alpha to const
+  this.ctx.globalAlpha = (this.selectedInd > -1) ? 0.6 : 1;
 
   for (var i = this.columns.length-1; i >= 0; i--) {
     this.ctx.beginPath();
@@ -1354,6 +1249,17 @@ StackedBarChart.prototype.drawChartContent = function() {
     this.drawSelectedChartContent();
   }
 
+}
+
+StackedBarChart.prototype.select = function(x, y) {
+  this.selectedScreenX = x;
+  this.selectedScreenY = y;
+  this.selectedInd = this.getIndByScreenX(x);
+  this.info.setTitle(createLabelFromDate(this.dateColumn[this.selectedInd], true));
+  this.columns.filter(c => c.isOn).forEach(c => {
+    this.info.setRowValue(c.name, c.values[this.selectedInd]);
+    this.info.setRowValue('All', this.stackedColumns[this.stackedColumns.length-1][this.selectedInd]);
+  });
 }
 
 StackedBarChart.prototype.drawSelectedChartContent = function () {
@@ -1388,7 +1294,7 @@ StackedBarChart.prototype.drawPreview = function() {
   for (var i = this.columns.length-1; i >= 0; i--) {
 
     this.ctx.beginPath();
-    this.ctx.globalAlpha = 1; // FIXME Alpha to const
+    this.ctx.globalAlpha = 1;
 
     for (var j = 0; j < X.length; j++) {
       this.ctx.rect(X[j], YCoords[i+1][j], barWidth, YCoords[i][j] - YCoords[i+1][j]);
@@ -1405,7 +1311,6 @@ function percentageStackedAreaChart(container, data, name) {
 }
 
 function PercentageStackedAreaChart(container, data) {
-  console.log(data);
   ChartBase.apply(this, arguments);
   this.init();
 }
@@ -1421,8 +1326,6 @@ PercentageStackedAreaChart.prototype.onResize = debounce(function(e) {
   var newWidth = this.container.getBoundingClientRect().width;
   var newHeight = this.container.getBoundingClientRect().height;
 
-  console.log('resize', this.name);
-
   newWidth = Math.min(newWidth, CHART_MAX_WIDTH);
   newHeight = Math.min(newHeight, CHART_MAX_HEIGHT);
   newHeight = Math.max(newHeight, CHART_MIN_HEIGHT);
@@ -1432,10 +1335,7 @@ PercentageStackedAreaChart.prototype.onResize = debounce(function(e) {
     this.updateWidth();
   }
 
-  if (newHeight !== this.h) {
-    // this.h = newHeight;
-    // this.updateHeight();
-  }
+  if (newHeight !== this.h) {}
 
 }, 20);
 
@@ -1458,21 +1358,18 @@ PercentageStackedAreaChart.prototype.initOyProps = function() {
     offsetY: 0,
     labels: [0, 25, 50, 75, 100]
   };
-  this.gridLinesHeight = Math.round((this.bottomY - this.marginTop) / 4); // move to const
+  this.gridLinesHeight = Math.round((this.bottomY - this.marginTop) / 4);
 
-  this.gridOyTextsColor = '#25252990'; // 50%
+  this.gridOyTextsColor = '#25252990';
 }
 
 
 PercentageStackedAreaChart.prototype.drawOyLabels = function(oyLabels) {
-  // if (oyLabels.alpha.value <= 0) return;
   this.ctx.globalAlpha = oyLabels.alpha.value;
-  this.ctx.strokeStyle = this.gridLinesColor; // FIXME color to const
-  this.ctx.fillStyle = this.gridOyTextsColor; // FIXME color to const
+  this.ctx.strokeStyle = this.gridLinesColor;
+  this.ctx.fillStyle = this.gridOyTextsColor;
   this.ctx.lineWidth = 1;
   this.ctx.beginPath();
-
-  // var offset = Math.round(this.gridLinesHeight * (oyLabels.labels.length - 1));
 
   for (var i = 1; i < oyLabels.labels.length; i++) {
     var y = this.bottomY - i * this.gridLinesHeight;
@@ -1489,7 +1386,6 @@ PercentageStackedAreaChart.prototype.drawOyLabels = function(oyLabels) {
 }
 
 PercentageStackedAreaChart.prototype.updatePercents = function () {
-  // this.percents = getStackedPercents(this.columns.filter(c => c.isOn).map(c => c.values));
   var now = performance.now();
 
   var stackedPercents = getStackedPercents(this.columns.map(c => {
@@ -1511,13 +1407,7 @@ PercentageStackedAreaChart.prototype.drawBg = function() {
   this.drawOxLabels(this.dynamicOxLabels, this.oxLabels.length - 1 - this.dynamicOxLabels.step/2);
 }
 
-// PercentageStackedAreaChart.prototype.drawOyLabels = function(oyLabels) {
-//   console.log('draw oy');
-// }
-
-
 PercentageStackedAreaChart.prototype.checkRedrawChartsContent = function(now) {
-  // console.log('check redraw');
   for (var i = 0; i < this.percents.length; i++) {
     for (var j = 0; j < this.percents[i].length; j++) {
       if (this.percents[i][j].nextTick(now)) {
@@ -1531,13 +1421,8 @@ PercentageStackedAreaChart.prototype.buttonClicked = function(name, isOn) {
   var now = performance.now();
   for (var i = 0; i < this.columns.length; i++) {
     if (this.columns[i].name === name) {
-      // if (isOn) this.columns[i].alpha.set(1, now, true)
-      // else this.columns[i].alpha.set(0, now, true)
       this.columns[i].isOn = isOn;
       this.updatePercents();
-
-      // this.gridPreviewMaxY.set(Math.max(this.calculateGridPreviewMaxY(), 0), now, true);
-
       this.update();
     }
   }
@@ -1545,8 +1430,8 @@ PercentageStackedAreaChart.prototype.buttonClicked = function(name, isOn) {
 
 PercentageStackedAreaChart.prototype.drawChartContent = function() {
   var barW = Math.round(this.barWidth*this.round)/this.round;
-  var sI = Math.max(this.startInd-1, 0);
-  var eI = Math.min(this.endInd+1, this.L);
+  var sI = Math.max(this.startInd - this.drawIndOffset, 0);
+  var eI = Math.min(this.endInd + this.drawIndOffset, this.L);
 
   var X = [];
   for (var i = sI; i < eI+1; i++) {
@@ -1570,7 +1455,6 @@ PercentageStackedAreaChart.prototype.drawChartContent = function() {
 }
 
 PercentageStackedAreaChart.prototype.drawArea = function (X, Y, color, alpha=1) {
-  // if (alpha > 0) {
     this.ctx.beginPath();
     this.ctx.globalAlpha = alpha;
     this.ctx.fillStyle = color;
@@ -1581,7 +1465,6 @@ PercentageStackedAreaChart.prototype.drawArea = function (X, Y, color, alpha=1) 
       this.ctx.lineTo(X[i], Y[i]);
     }
     this.ctx.fill();
-  // }
 }
 
 PercentageStackedAreaChart.prototype.drawPreview = function() {
@@ -1595,7 +1478,7 @@ PercentageStackedAreaChart.prototype.drawPreview = function() {
   X[X.length-1] = Math.floor(X[X.length-1]);
   X = X.concat(X[X.length-1], X[0]);
 
-  var mins = transpose(this.percents).map(c => getMin(c.map(v => v.value))); // Убрать отсюда, можно пересчитывать при изменениях в данных
+  var mins = transpose(this.percents).map(c => getMin(c.map(v => v.value)));
 
   for (var i = this.columns.length - 1; i >= 0 ; i--) {
     var values = this.percents.map(p => p[i]);
@@ -1608,22 +1491,12 @@ PercentageStackedAreaChart.prototype.drawPreview = function() {
 }
 
 PercentageStackedAreaChart.prototype.drawSelectedChartContent = function() {
-  // if (this.selectedInd > 0) {
-
     this.ctx.beginPath();
     this.ctx.strokeStyle = this.gridLinesColor;
     this.ctx.lineWidth = 1;
     this.ctx.moveTo(this.selectedScreenX + 0.5, 0);
     this.ctx.lineTo(this.selectedScreenX + 0.5, this.bottomY);
     this.ctx.stroke();
-
-  //   this.info.style.left = this.selectedScreenX - this.info.offsetWidth - 30 + 'px'; // FIXME this.info margin
-  //   this.info.style.top = this.selectedScreenY - this.info.offsetHeight/2 + 'px'; // FIXME this.info margin
-  //   this.info.appear();
-  // }
-  // else {
-  //   this.info.disappear()
-  // }
 }
 
 function createButton(color, text, onClick) {
@@ -1641,9 +1514,7 @@ function createButton(color, text, onClick) {
 
   button.onclick = function() {
     button.isOn = !button.isOn;
-    if (!button.isOn) {
-      // button.style.borderWidth = '0px';
-    }
+    if (!button.isOn) {}
     if (onClick) onClick(button.name, button.isOn);
   };
 
@@ -1654,14 +1525,11 @@ const INFO_ANIMATION_TIME = 0.3;
 
 function createInfo(name) {
   var container = document.createElement('div');
-  // container.style.position = 'absolute';
   container.classList.add('point-info');
   container.style.transition = 'opacity ' + INFO_ANIMATION_TIME + 's';
   container.style.opacity = 0;
   container.style.display = 'none';
   container.isOn = false;
-
-  // container.style.backgroundColor = 'red';
 
   var title = document.createElement('h4');
   title.classList.add('point-info-title');
@@ -1690,9 +1558,6 @@ function createInfo(name) {
     title.innerHTML = text;
   }
 
-  // container.getWidth = function() {
-  //   return conatinergetCli
-  // }
   var rows = {};
 
   container.addRow = function(text, value, color='black') {
@@ -1794,63 +1659,103 @@ function preview(w, h) {
   }
   setTheme(PREVIEW_DAY_THEME);
 
-  canvas.onmousedown = function(e) {
-    // console.log('mouse down', e);
+  function leftZoneUpdate(x) {
+    if (leftX > rightX - PREVIEW_MIN_WIDTH) leftX = rightX - PREVIEW_MIN_WIDTH;
+    else if (leftX < 0) leftX = 0;
 
-    if (isLeftZone(e.offsetX)) {
+    requestAnimationFrame(function() {
+      draw();
+      updateState();
+    });
+  }
+
+  function centralZoneUpdate(currWidth) {
+    if (leftX < 0) leftX = 0;
+    if (leftX > canvas.width - currWidth) leftX = canvas.width - currWidth;
+    rightX = leftX + currWidth;
+
+    requestAnimationFrame(function() {
+      draw();
+      updateState();
+    });
+  }
+
+  function rightZoneUpdate(x) {
+    if (rightX < leftX + PREVIEW_MIN_WIDTH) rightX = leftX + PREVIEW_MIN_WIDTH;
+    else if (rightX > canvas.width) rightX = canvas.width;
+
+    requestAnimationFrame(function() {
+      draw();
+      updateState();
+    });
+  }
+
+  canvas.onmousedown = function(e) {
+    if (isLeftZone(e.clientX - canvas.getBoundingClientRect().x)) {
       var offsetLeftX = leftX - e.clientX;
 
-      onmousemove = function(e) { // TODO Отвязать от window! Привязать к основному контейнеру
+      onmousemove = function(e) {
         leftX = e.clientX + offsetLeftX;
-        if (leftX > rightX - PREVIEW_MIN_WIDTH) leftX = rightX - PREVIEW_MIN_WIDTH;
-        else if (leftX < 0) leftX = 0;
-        // requestAnimationFrame(draw);
-        // updateState();
-
-        requestAnimationFrame(function() {
-          draw();
-          updateState();
-        });
+        leftZoneUpdate();
       };
     }
-    else if (isCentralZone(e.offsetX)) {
+    else if (isCentralZone(e.clientX - canvas.getBoundingClientRect().x)) {
+
       var offsetLeftX = leftX - e.clientX;
       var currWidth = rightX - leftX;
 
       onmousemove = function(e) {
         leftX = e.clientX + offsetLeftX;
-        if (leftX < 0) leftX = 0;
-        if (leftX > canvas.width - currWidth) leftX = canvas.width - currWidth;
-        rightX = leftX + currWidth;
-        // requestAnimationFrame(draw);
-        // updateState();
-
-        requestAnimationFrame(function() {
-          draw();
-          updateState();
-        });
+        centralZoneUpdate(currWidth);
       };
     }
-    else if (isRightZone(e.offsetX)) {
+    else if (isRightZone(e.clientX - canvas.getBoundingClientRect().x)) {
       var offsetRightX = rightX - e.clientX;
 
       onmousemove = function(e) {
         rightX = e.clientX + offsetRightX;
-        if (rightX < leftX + PREVIEW_MIN_WIDTH) rightX = leftX + PREVIEW_MIN_WIDTH;
-        else if (rightX > canvas.width) rightX = canvas.width;
-        // requestAnimationFrame(draw);
-        // updateState();
-
-        requestAnimationFrame(function() {
-          draw();
-          updateState();
-        });
+        rightZoneUpdate();
       };
     }
 
     onmouseup = function(e) {
       onmousemove = null;
       onmouseup = null;
+    }
+
+    return false;
+  }
+
+  canvas.ontouchstart = function(e) {
+    if (isLeftZone(e.touches[0].clientX - canvas.getBoundingClientRect().x)) {
+      var offsetLeftX = leftX - e.touches[0].clientX;
+
+      ontouchmove = function(e) {
+        leftX = e.touches[0].clientX + offsetLeftX;
+        leftZoneUpdate();
+      };
+    }
+    else if (isCentralZone(e.touches[0].clientX - canvas.getBoundingClientRect().x)) {
+      var offsetLeftX = leftX - e.touches[0].clientX;
+      var currWidth = rightX - leftX;
+
+      ontouchmove = function(e) {
+        leftX = e.touches[0].clientX + offsetLeftX;
+        centralZoneUpdate(currWidth);
+      };
+    }
+    else if (isRightZone(e.touches[0].clientX - canvas.getBoundingClientRect().x)) {
+      var offsetRightX = rightX - e.touches[0].clientX;
+
+      ontouchmove = function(e) {
+        rightX = e.touches[0].clientX + offsetRightX;
+        rightZoneUpdate();
+      };
+    }
+
+    ontouchend = function(e) {
+      ontouchmove = null;
+      ontouchend = null;
     }
 
     return false;
@@ -1868,7 +1773,6 @@ function preview(w, h) {
     var left = leftX;
     var right = rightX;
     ctx.rect(0, PREVIEW_INNER_MARGIN_TOP, left + maskOverlayX, previewHeight);
-    // ctx.rect(0, PREVIEW_INNER_MARGIN_TOP, left, previewHeight);
     ctx.rect(right - maskOverlayX, PREVIEW_INNER_MARGIN_TOP, canvas.width - right + maskOverlayX, previewHeight);
     ctx.fill();
 
@@ -1959,9 +1863,6 @@ function preview(w, h) {
       [0, PREVIEW_BORDER_RADIUS, PREVIEW_BORDER_RADIUS, 0],
       true
     );
-    // ctx.fill();
-
-    // requestAnimationFrame(draw);
   }
 
   function isLeftZone(x) {
@@ -1981,10 +1882,6 @@ function preview(w, h) {
 }
 
 function roundRect(ctx, x, y, width, height, radius, fill, stroke) {
-
-  // console.log('typeof', typeof radius);
-
-
   if (typeof stroke == 'undefined') {
     stroke = true;
   }
@@ -2022,19 +1919,19 @@ function roundRect(ctx, x, y, width, height, radius, fill, stroke) {
 
 }
 
-function AnimatedValue(value, duration=0.5) {
+function AnimatedValue(value, duration) {
+  duration = duration || 0.5;
   this.value = value;
   this.duration = duration * 1000;
   this.ease = function(t) {
     return t*(2-t);
   }
 }
-AnimatedValue.prototype.set = function(newValue, now=performance.now(), animated=false) {
-  // console.log('anim set', newValue);
+AnimatedValue.prototype.set = function(newValue, now, animated) {
+  now = now || performance.now();
+  animated = animated || false;
   if (!animated) { this.value = newValue;return; }
   if (newValue === this.toValue) { return; }
-
-
 
   if (isNaN(this.value)) {
     return;
@@ -2048,11 +1945,6 @@ AnimatedValue.prototype.set = function(newValue, now=performance.now(), animated
 AnimatedValue.prototype.nextTick = function(now, name) {
   if (this.started) {
     var p = (now - this.started)/this.duration;
-
-    // if (name) {
-    //   console.log('next tick', name);
-    //   console.log(this.value);
-    // }
 
     if (p > 1) p = 1;
     if (p < 0) p = 0;
@@ -2116,12 +2008,12 @@ function debounce(func, wait, immediate) {
 	};
 }
 
-function getGridValuesByMax(max) { // FIXME Отвязать от 6
+function getGridValuesByMax(max) {
   const k = getStepForGridValues(max);
   return [0, 1, 2, 3, 4, 5, 6].map(i => i*k/5);
 }
 
-function getStepForGridValues(max, k=1) { // FIXME Отвязать от 6
+function getStepForGridValues(max, k=1) {
   if (max == Number.POSITIVE_INFINITY || max == Number.NEGATIVE_INFINITY || max === 0) return 0;
 
   if (max > 100) return getStepForGridValues(max/10, k*10);

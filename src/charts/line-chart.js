@@ -97,7 +97,7 @@ LineChart.prototype.checkRedrawChartsContent = function(now) {
   if (this.gridPreviewMaxY.nextTick(now)) this.needDrawPreview = true;
 }
 
-LineChart.prototype.drawChartContent = function() {
+LineChart.prototype.drawChartContent1 = function() {
   var barW = Math.round(this.barWidth*this.round)/this.round;
   var sI = Math.max(this.startInd - this.drawIndOffset, 0);
   var eI = Math.min(this.endInd + this.drawIndOffset, this.L);

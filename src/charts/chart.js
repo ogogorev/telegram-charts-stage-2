@@ -245,6 +245,9 @@ ChartBase.prototype.initDrawProps = function() {
   this.barWidth = 0; // FIXME rename to step
   this.offsetX = 0;
 
+  this.oldRangeX = 0;
+  this.currRangeX = 1;
+
   this.startInd = 0;
   this.endInd = 0;
   this.selectedInd = -1;
@@ -313,8 +316,8 @@ ChartBase.prototype.updateRange = function(left, right) {
 }
 
 ChartBase.prototype.drawBg = function() {
-  this.drawOxLabels(this.staticOxLabels, this.oxLabels.length - 1);
-  this.drawOxLabels(this.dynamicOxLabels, this.oxLabels.length - 1 - Math.floor(this.dynamicOxLabels.step/2)); // Говно какое-то
+  // this.drawOxLabels(this.staticOxLabels, this.oxLabels.length - 1);
+  // this.drawOxLabels(this.dynamicOxLabels, this.oxLabels.length - 1 - Math.floor(this.dynamicOxLabels.step/2)); // Говно какое-то
   this.drawOyLabels(this.oldOyLabels);
   this.drawOyLabels(this.newOyLabels);
   this.drawZeroLine();
@@ -449,17 +452,6 @@ ChartBase.prototype.buttonClicked = function() {}
 
 ChartBase.prototype.draw = function() {
   requestAnimationFrame(function() {
-
-    // this.startInd = Math.max(Math.ceil(this.previewUILeftX * this.L) - 1, 0);
-    // this.endInd = Math.ceil(this.previewUIRightX * this.L);
-    // this.barWidth = this.gridWidth/(this.L*(this.previewUIRightX-this.previewUILeftX));
-    // this.offsetX = calculateOffsetX(this.gridWidth, CHART_GRID_PADDING, this.previewUILeftX, this.previewUIRightX);
-
-    // this.updateDateRange();
-    // this.calculateOxLabelsOffsetX();
-    // this.updateY();
-
-    // ==========================
 
     // this.ctx.clearRect(0, 0, this.w, this.oxLabelsBottomY);
     this.ctx.clearRect(0, 0, this.w, this.previewChartY);

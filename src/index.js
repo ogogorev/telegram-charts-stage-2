@@ -12,34 +12,15 @@ import { barChart } from './charts/bar-chart';
 import { percentageStackedAreaChart } from './charts/stacked-area-chart';
 
 function main() {
-
-
-  // var chart = createChart(400, 450, chart_data);
-
-  // var chart = lineChart(document.body, chart_data1, 'Line chart');
-  // document.body.append(chart);
-  //
-  // var chart = twoAxesLineChart(chart_data2, 'Two axes line chart');
-  // document.body.append(chart);
-  // //
-  // var chart = stackedBarChart(chart_data3, 'Stacked bar chart');
-  // document.body.append(chart);
-  //
-  // var chart = barChart(chart_data4, 'Bar chart');
-  // document.body.append(chart);
-  //
-  // var chart = percentageStackedAreaChart(chart_data5, 'Stacked area chart');
-  // document.body.append(chart);
-
   var appContainer = document.getElementById('app-container');
 
   var charts = [];
 
   charts.push(lineChart(appContainer, chart_data1, 'Line chart'));
-  charts.push(twoAxesLineChart(appContainer, chart_data2, 'Two axes line chart'));
-  charts.push(stackedBarChart(appContainer, chart_data3, 'Stacked bar chart'));
-  charts.push(barChart(appContainer, chart_data4, 'Bar chart'));
-  charts.push(percentageStackedAreaChart(appContainer, chart_data5, 'Stacked area chart'));
+  // charts.push(twoAxesLineChart(appContainer, chart_data2, 'Two axes line chart'));
+  // charts.push(stackedBarChart(appContainer, chart_data3, 'Stacked bar chart'));
+  // charts.push(barChart(appContainer, chart_data4, 'Bar chart'));
+  // charts.push(percentageStackedAreaChart(appContainer, chart_data5, 'Stacked area chart'));
 
   var isDayMode = true;
   var button = document.getElementById('mode');
