@@ -36,19 +36,13 @@ export function ChartBase(container, data, name) {
   this.chartContainer = document.createElement('div');
   this.chartContainer.classList.add('chart');
 
-  // console.log('create chart', container.getBoundingClientRect().height);
+  this.pixelRatio = window.devicePixelRatio;
 
   this.w = Math.min(container.getBoundingClientRect().width, CHART_MAX_WIDTH);
-  // this.h = Math.min(container.getBoundingClientRect().height, CHART_MAX_HEIGHT);
-  // console.log('h', this.h);
-  //
-  // this.h = Math.max(this.h, CHART_MIN_HEIGHT);
-  // console.log('h', this.h);
-  this.h = 400
+  this.h = 400;
+
   this.name = name;
-  // me.container.id = 'chart container';
   this.chartContainer.style.width = this.w + 'px';
-  // this.chartContainer.style.height = this.h + 'px';
   this.chartContainer.style.position = 'relative';
 
   this.initHeader();
@@ -66,13 +60,14 @@ export function ChartBase(container, data, name) {
   this.initData();
   this.L = this.oxLabels.length - 1; // FIXME Rename
 
-  // console.log(window);
   this.addListeners();
 
   container.append(this.chartContainer);
 }
 
-ChartBase.prototype.addListeners = function () {}
+ChartBase.prototype.addListeners = function () {
+  window.addEventListener('resize', debounce(this.onResize, 20).bind(this));
+}
 
 ChartBase.prototype.switchMode = function (isDay=true) {
   if (isDay) {
@@ -100,22 +95,20 @@ ChartBase.prototype.initColors = function (theme) {
 
 ChartBase.prototype.initCanvas = function () {
   this.canvas = document.createElement('canvas');
-  this.canvas.width = this.w;
-  this.canvas.height = this.h;
+  this.canvas.width = this.w * this.pixelRatio;
+  this.canvas.height = this.h * this.pixelRatio;
+  this.canvas.style.width = this.w + 'px';
+  this.canvas.style.height = this.h + 'px';
+
   this.canvas.onmouseenter = this.onMouseEnter.bind(this);
   this.chartContainer.append(this.canvas);
   this.ctx = this.canvas.getContext('2d');
-
-  // var scale = window.devicePixelRatio;
-  // console.log('scale', scale);
-  // this.canvas.width = this.w * scale;
-  // this.canvas.height = this.h * scale;
+  this.ctx.scale(this.pixelRatio, this.pixelRatio);
 }
 
 ChartBase.prototype.initPreviewUI = function () {
-  this.previewUI = preview(this.w - CHART_GRID_PADDING*2, PREVIEW_HEIGHT);
+  this.previewUI = preview(this.w - CHART_GRID_PADDING*2, PREVIEW_HEIGHT, this.pixelRatio);
   this.previewUI.style.position = 'absolute';
-  // this.previewUI.style.top = this.h - PREVIEW_CHART_HEIGHT - PREVIEW_INNER_MARGIN_TOP + 'px';
   this.previewUI.style.top = this.h - PREVIEW_INNER_MARGIN_TOP + 'px';
   this.previewUI.style.left = CHART_GRID_PADDING + 'px';
 
@@ -127,9 +120,12 @@ ChartBase.prototype.initPreviewUI = function () {
 }
 
 ChartBase.prototype.updateWidth = function() {
-  this.chartContainer.style.width = this.w + 'px';
-  this.canvas.width = this.w;
-  this.previewUI.updateWidth(this.w - CHART_GRID_PADDING*2);
+  this.canvas.width = this.w * this.pixelRatio;
+  this.canvas.height = this.h * this.pixelRatio;
+  this.canvas.style.width = this.w + 'px'
+  this.ctx.scale(this.pixelRatio, this.pixelRatio);
+
+  this.previewUI.updateWidth(this.w - CHART_GRID_PADDING*2, this.pixelRatio);
 
   this.header.style.width = this.w - CHART_GRID_PADDING*2 + 'px';
   this.gridWidth = this.w - CHART_GRID_PADDING*2;
@@ -153,27 +149,23 @@ ChartBase.prototype.updateHeight = function () {
   this.previewChartY = this.h - PREVIEW_CHART_HEIGHT + 1;
 };
 
-ChartBase.prototype.onResize = debounce(function(e) {
+ChartBase.prototype.onResize = function(e) {
   var newWidth = this.container.getBoundingClientRect().width;
   var newHeight = this.container.getBoundingClientRect().height;
-
-  console.log('resize', this.name);
 
   newWidth = Math.min(newWidth, CHART_MAX_WIDTH);
   newHeight = Math.min(newHeight, CHART_MAX_HEIGHT);
   newHeight = Math.max(newHeight, CHART_MIN_HEIGHT);
 
-  if (newWidth !== this.w) {
+  if (newWidth !== this.w || this.pixelRatio !== window.devicePixelRatio) {
+    this.pixelRatio = window.devicePixelRatio;
     this.w = newWidth;
     this.updateWidth();
   }
 
-  if (newHeight !== this.h) {
-    // this.h = newHeight;
-    // this.updateHeight();
-  }
+  if (newHeight !== this.h) { }
 
-}, 20);
+};
 
 ChartBase.prototype.initHeader = function () {
   this.header = document.createElement('div');
@@ -184,7 +176,7 @@ ChartBase.prototype.initHeader = function () {
   this.header.style.margin = '0 0 ' + CHART_HEADER_MARGIN_BOTTOM + 'px ' + CHART_GRID_PADDING + 'px';
 
   var title = document.createElement('h4');
-  title.innerHTML = this.name;
+  title.innerHTML = this.name + ' ' + this.pixelRatio;
   this.header.append(title);
 
   this.dateRange = document.createElement('h5');
@@ -316,8 +308,8 @@ ChartBase.prototype.updateRange = function(left, right) {
 }
 
 ChartBase.prototype.drawBg = function() {
-  // this.drawOxLabels(this.staticOxLabels, this.oxLabels.length - 1);
-  // this.drawOxLabels(this.dynamicOxLabels, this.oxLabels.length - 1 - Math.floor(this.dynamicOxLabels.step/2)); // Говно какое-то
+  this.drawOxLabels(this.staticOxLabels, this.oxLabels.length - 1);
+  this.drawOxLabels(this.dynamicOxLabels, this.oxLabels.length - 1 - Math.floor(this.dynamicOxLabels.step/2)); // Говно какое-то
   this.drawOyLabels(this.oldOyLabels);
   this.drawOyLabels(this.newOyLabels);
   this.drawZeroLine();

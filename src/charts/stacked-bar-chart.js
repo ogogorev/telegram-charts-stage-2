@@ -42,32 +42,6 @@ function StackedBarChart(container, data) {
 StackedBarChart.prototype = Object.create(BarChart.prototype);
 StackedBarChart.prototype.constructor = StackedBarChart;
 
-StackedBarChart.prototype.addListeners = function () {
-  window.addEventListener('resize', this.onResize.bind(this));
-}
-
-StackedBarChart.prototype.onResize = debounce(function(e) {
-  var newWidth = this.container.getBoundingClientRect().width;
-  var newHeight = this.container.getBoundingClientRect().height;
-
-  console.log('resize', this.name);
-
-  newWidth = Math.min(newWidth, CHART_MAX_WIDTH);
-  newHeight = Math.min(newHeight, CHART_MAX_HEIGHT);
-  newHeight = Math.max(newHeight, CHART_MIN_HEIGHT);
-
-  if (newWidth !== this.w) {
-    this.w = newWidth;
-    this.updateWidth();
-  }
-
-  if (newHeight !== this.h) {
-    // this.h = newHeight;
-    // this.updateHeight();
-  }
-
-}, 20);
-
 StackedBarChart.prototype.initData = function() {
   ChartBase.prototype.initData.call(this);
 

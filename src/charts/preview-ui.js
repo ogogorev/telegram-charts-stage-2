@@ -8,26 +8,33 @@ const PREVIEW_MIN_WIDTH = 30;
 const PREVIEW_BORDERS_WIDTH = 10;
 const PREVIEW_BORDER_RADIUS = 5;
 
-export function preview(w, h) {
+export function preview(w, h, pixelRatio) {
   var canvas = document.createElement('canvas');
-  canvas.width = w;
-  canvas.height = h;
+  var ctx = canvas.getContext('2d');
+
+  var currW = w;
+  var currH = h;
+
+  canvas.width = currW * pixelRatio;
+  canvas.height = currH * pixelRatio;
+  canvas.style.width = currW + 'px';
+  canvas.style.height = currH + 'px';
+  ctx.scale(pixelRatio, pixelRatio);
 
   var previewMaskColor = '#000000';
   var previewMaskAlpha = '#000000';
   var previewBorderColor = '#000000';
   var previewCornersFillColor = '#000000';
 
-  var previewHeight = canvas.height - PREVIEW_INNER_MARGIN_TOP * 2;
-  var ctx = canvas.getContext('2d');
+  var previewHeight = currH - PREVIEW_INNER_MARGIN_TOP * 2;
 
-  var leftX = (1 - PREVIEW_INIT_W) * canvas.width;
-  var rightX = 1 * canvas.width;
+  var leftX = (1 - PREVIEW_INIT_W) * currW;
+  var rightX = 1 * currW;
 
   var state = { left: 1 - PREVIEW_INIT_W, right: 1 };
   function updateState() {
-    state.left = leftX/canvas.width;
-    state.right = rightX/canvas.width;
+    state.left = leftX/currW;
+    state.right = rightX/currW;
 
     if (canvas.onupdate) {
       canvas.onupdate(state);
@@ -35,12 +42,16 @@ export function preview(w, h) {
   }
   updateState();
 
+  canvas.updateWidth = function(w, pixelRatio) { //FIXME Rename
+    currW = w;
 
-  canvas.updateWidth = function(w) {
-    canvas.width = w;
+    canvas.width = currW * pixelRatio;
+    canvas.height = currH * pixelRatio;
+    canvas.style.width = currW + 'px';
+    ctx.scale(pixelRatio, pixelRatio);
 
-    leftX = state.left * canvas.width;
-    rightX = state.right * canvas.width;
+    leftX = state.left * currW
+    rightX = state.right * currW;
 
     draw();
   }
@@ -61,8 +72,6 @@ export function preview(w, h) {
   function leftZoneUpdate(x) {
     if (leftX > rightX - PREVIEW_MIN_WIDTH) leftX = rightX - PREVIEW_MIN_WIDTH;
     else if (leftX < 0) leftX = 0;
-    // requestAnimationFrame(draw);
-    // updateState();
 
     requestAnimationFrame(function() {
       draw();
@@ -72,10 +81,8 @@ export function preview(w, h) {
 
   function centralZoneUpdate(currWidth) {
     if (leftX < 0) leftX = 0;
-    if (leftX > canvas.width - currWidth) leftX = canvas.width - currWidth;
+    if (leftX > currW - currWidth) leftX = currW - currWidth;
     rightX = leftX + currWidth;
-    // requestAnimationFrame(draw);
-    // updateState();
 
     requestAnimationFrame(function() {
       draw();
@@ -85,9 +92,7 @@ export function preview(w, h) {
 
   function rightZoneUpdate(x) {
     if (rightX < leftX + PREVIEW_MIN_WIDTH) rightX = leftX + PREVIEW_MIN_WIDTH;
-    else if (rightX > canvas.width) rightX = canvas.width;
-    // requestAnimationFrame(draw);
-    // updateState();
+    else if (rightX > currW) rightX = currW;
 
     requestAnimationFrame(function() {
       draw();
@@ -98,62 +103,29 @@ export function preview(w, h) {
   canvas.onmousedown = function(e) {
     console.log('mouse down', e);
 
-    // if (isLeftZone(e.offsetX)) {
     if (isLeftZone(e.clientX - canvas.getBoundingClientRect().x)) {
-      // leftZone(e.clientX);
       var offsetLeftX = leftX - e.clientX;
 
       onmousemove = function(e) { // TODO Отвязать от window! Привязать к основному контейнеру
         leftX = e.clientX + offsetLeftX;
         leftZoneUpdate();
-        // if (leftX > rightX - PREVIEW_MIN_WIDTH) leftX = rightX - PREVIEW_MIN_WIDTH;
-        // else if (leftX < 0) leftX = 0;
-        // // requestAnimationFrame(draw);
-        // // updateState();
-        //
-        // requestAnimationFrame(function() {
-        //   draw();
-        //   updateState();
-        // });
       };
     }
     else if (isCentralZone(e.clientX - canvas.getBoundingClientRect().x)) {
-      // centralZone(e.clientX);
-
       var offsetLeftX = leftX - e.clientX;
       var currWidth = rightX - leftX;
 
       onmousemove = function(e) {
         leftX = e.clientX + offsetLeftX;
         centralZoneUpdate(currWidth);
-        // if (leftX < 0) leftX = 0;
-        // if (leftX > canvas.width - currWidth) leftX = canvas.width - currWidth;
-        // rightX = leftX + currWidth;
-        // // requestAnimationFrame(draw);
-        // // updateState();
-        //
-        // requestAnimationFrame(function() {
-        //   draw();
-        //   updateState();
-        // });
       };
     }
     else if (isRightZone(e.clientX - canvas.getBoundingClientRect().x)) {
-      // rightZone(e.clientX);
       var offsetRightX = rightX - e.clientX;
 
       onmousemove = function(e) {
         rightX = e.clientX + offsetRightX;
         rightZoneUpdate();
-        // if (rightX < leftX + PREVIEW_MIN_WIDTH) rightX = leftX + PREVIEW_MIN_WIDTH;
-        // else if (rightX > canvas.width) rightX = canvas.width;
-        // // requestAnimationFrame(draw);
-        // // updateState();
-        //
-        // requestAnimationFrame(function() {
-        //   draw();
-        //   updateState();
-        // });
       };
     }
 
@@ -168,24 +140,12 @@ export function preview(w, h) {
   canvas.ontouchstart = function(e) {
     console.log('mouse down', e);
 
-    // console.log('touch ', canvas.getBoundingClientRect().x);
-    // console.log('touch ', e.touches[0].clientX - canvas.getBoundingClientRect().x);
-
     if (isLeftZone(e.touches[0].clientX - canvas.getBoundingClientRect().x)) {
       var offsetLeftX = leftX - e.touches[0].clientX;
 
       ontouchmove = function(e) { // TODO Отвязать от window! Привязать к основному контейнеру
         leftX = e.touches[0].clientX + offsetLeftX;
         leftZoneUpdate();
-        // if (leftX > rightX - PREVIEW_MIN_WIDTH) leftX = rightX - PREVIEW_MIN_WIDTH;
-        // else if (leftX < 0) leftX = 0;
-        // // requestAnimationFrame(draw);
-        // // updateState();
-        //
-        // requestAnimationFrame(function() {
-        //   draw();
-        //   updateState();
-        // });
       };
     }
     else if (isCentralZone(e.touches[0].clientX - canvas.getBoundingClientRect().x)) {
@@ -195,16 +155,6 @@ export function preview(w, h) {
       ontouchmove = function(e) {
         leftX = e.touches[0].clientX + offsetLeftX;
         centralZoneUpdate(currWidth);
-        // if (leftX < 0) leftX = 0;
-        // if (leftX > canvas.width - currWidth) leftX = canvas.width - currWidth;
-        // rightX = leftX + currWidth;
-        // // requestAnimationFrame(draw);
-        // // updateState();
-        //
-        // requestAnimationFrame(function() {
-        //   draw();
-        //   updateState();
-        // });
       };
     }
     else if (isRightZone(e.touches[0].clientX - canvas.getBoundingClientRect().x)) {
@@ -213,15 +163,6 @@ export function preview(w, h) {
       ontouchmove = function(e) {
         rightX = e.touches[0].clientX + offsetRightX;
         rightZoneUpdate();
-        // if (rightX < leftX + PREVIEW_MIN_WIDTH) rightX = leftX + PREVIEW_MIN_WIDTH;
-        // else if (rightX > canvas.width) rightX = canvas.width;
-        // // requestAnimationFrame(draw);
-        // // updateState();
-        //
-        // requestAnimationFrame(function() {
-        //   draw();
-        //   updateState();
-        // });
       };
     }
 
@@ -236,7 +177,7 @@ export function preview(w, h) {
   var offX = 1;
   var maskOverlayX = 4;
   function draw() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.clearRect(0, 0, currW, currH);
 
     ctx.beginPath();
     ctx.fillStyle = previewMaskColor;
@@ -245,8 +186,7 @@ export function preview(w, h) {
     var left = leftX;
     var right = rightX;
     ctx.rect(0, PREVIEW_INNER_MARGIN_TOP, left + maskOverlayX, previewHeight);
-    // ctx.rect(0, PREVIEW_INNER_MARGIN_TOP, left, previewHeight);
-    ctx.rect(right - maskOverlayX, PREVIEW_INNER_MARGIN_TOP, canvas.width - right + maskOverlayX, previewHeight);
+    ctx.rect(right - maskOverlayX, PREVIEW_INNER_MARGIN_TOP, currW - right + maskOverlayX, previewHeight);
     ctx.fill();
 
 
@@ -268,41 +208,41 @@ export function preview(w, h) {
 
     ctx.beginPath();
     ctx.arc(
-      canvas.width - PREVIEW_BORDER_RADIUS,
+      currW - PREVIEW_BORDER_RADIUS,
       PREVIEW_BORDER_RADIUS + PREVIEW_INNER_MARGIN_TOP,
       PREVIEW_BORDER_RADIUS,
       1.5*Math.PI,
       0*Math.PI
     );
-    ctx.moveTo(canvas.width, PREVIEW_BORDER_RADIUS + PREVIEW_INNER_MARGIN_TOP);
-    ctx.lineTo(canvas.width, PREVIEW_INNER_MARGIN_TOP);
-    ctx.lineTo(canvas.width - PREVIEW_BORDER_RADIUS, PREVIEW_INNER_MARGIN_TOP);
+    ctx.moveTo(currW, PREVIEW_BORDER_RADIUS + PREVIEW_INNER_MARGIN_TOP);
+    ctx.lineTo(currW, PREVIEW_INNER_MARGIN_TOP);
+    ctx.lineTo(currW - PREVIEW_BORDER_RADIUS, PREVIEW_INNER_MARGIN_TOP);
     ctx.fill();
 
     ctx.beginPath();
     ctx.arc(
-      canvas.width - PREVIEW_BORDER_RADIUS,
-      canvas.height - PREVIEW_BORDER_RADIUS - PREVIEW_INNER_MARGIN_TOP,
+      currW - PREVIEW_BORDER_RADIUS,
+      currH - PREVIEW_BORDER_RADIUS - PREVIEW_INNER_MARGIN_TOP,
       PREVIEW_BORDER_RADIUS,
       0*Math.PI,
       0.5*Math.PI
     );
-    ctx.moveTo(canvas.width - PREVIEW_BORDER_RADIUS, canvas.height - PREVIEW_INNER_MARGIN_TOP);
-    ctx.lineTo(canvas.width, canvas.height - PREVIEW_INNER_MARGIN_TOP);
-    ctx.lineTo(canvas.width, canvas.height - PREVIEW_BORDER_RADIUS - PREVIEW_INNER_MARGIN_TOP);
+    ctx.moveTo(currW - PREVIEW_BORDER_RADIUS, currH - PREVIEW_INNER_MARGIN_TOP);
+    ctx.lineTo(currW, currH - PREVIEW_INNER_MARGIN_TOP);
+    ctx.lineTo(currW, currH - PREVIEW_BORDER_RADIUS - PREVIEW_INNER_MARGIN_TOP);
     ctx.fill();
 
     ctx.beginPath();
     ctx.arc(
       PREVIEW_BORDER_RADIUS,
-      canvas.height - PREVIEW_BORDER_RADIUS - PREVIEW_INNER_MARGIN_TOP,
+      currH - PREVIEW_BORDER_RADIUS - PREVIEW_INNER_MARGIN_TOP,
       PREVIEW_BORDER_RADIUS,
       0.5*Math.PI,
       1*Math.PI
     );
-    ctx.moveTo(0, canvas.height - PREVIEW_BORDER_RADIUS - PREVIEW_INNER_MARGIN_TOP);
-    ctx.lineTo(0, canvas.height - PREVIEW_INNER_MARGIN_TOP);
-    ctx.lineTo(PREVIEW_BORDER_RADIUS, canvas.height - PREVIEW_INNER_MARGIN_TOP);
+    ctx.moveTo(0, currH - PREVIEW_BORDER_RADIUS - PREVIEW_INNER_MARGIN_TOP);
+    ctx.lineTo(0, currH - PREVIEW_INNER_MARGIN_TOP);
+    ctx.lineTo(PREVIEW_BORDER_RADIUS, currH - PREVIEW_INNER_MARGIN_TOP);
     ctx.fill();
 
     ctx.strokeStyle = previewBorderColor;
@@ -336,9 +276,6 @@ export function preview(w, h) {
       [0, PREVIEW_BORDER_RADIUS, PREVIEW_BORDER_RADIUS, 0],
       true
     );
-    // ctx.fill();
-
-    // requestAnimationFrame(draw);
   }
 
   function isLeftZone(x) {
@@ -358,10 +295,6 @@ export function preview(w, h) {
 }
 
 function roundRect(ctx, x, y, width, height, radius, fill, stroke) {
-
-  // console.log('typeof', typeof radius);
-
-
   if (typeof stroke == 'undefined') {
     stroke = true;
   }

@@ -27,7 +27,6 @@ export function BarChart(container, data) {
   ChartBase.apply(this, arguments);
   this.L++;
   this.init();
-
 }
 
 BarChart.prototype = Object.create(ChartBase.prototype);
@@ -36,32 +35,6 @@ BarChart.prototype.constructor = BarChart;
 BarChart.prototype.updateDateRange = function () {
   ChartBase.prototype.updateDateRange.call(this, this.startInd, this.endInd-1)
 }
-
-BarChart.prototype.addListeners = function () {
-  window.addEventListener('resize', this.onResize.bind(this));
-}
-
-BarChart.prototype.onResize = debounce(function(e) {
-  var newWidth = this.container.getBoundingClientRect().width;
-  var newHeight = this.container.getBoundingClientRect().height;
-
-  console.log('resize', this.name);
-
-  newWidth = Math.min(newWidth, CHART_MAX_WIDTH);
-  newHeight = Math.min(newHeight, CHART_MAX_HEIGHT);
-  newHeight = Math.max(newHeight, CHART_MIN_HEIGHT);
-
-  if (newWidth !== this.w) {
-    this.w = newWidth;
-    this.updateWidth();
-  }
-
-  if (newHeight !== this.h) {
-    // this.h = newHeight;
-    // this.updateHeight();
-  }
-
-}, 20);
 
 BarChart.prototype.initData = function() {
   ChartBase.prototype.initData.call(this, 150);

@@ -35,32 +35,6 @@ export function PercentageStackedAreaChart(container, data) {
 PercentageStackedAreaChart.prototype = Object.create(ChartBase.prototype);
 PercentageStackedAreaChart.prototype.constructor = PercentageStackedAreaChart;
 
-PercentageStackedAreaChart.prototype.addListeners = function () {
-  window.addEventListener('resize', this.onResize.bind(this));
-}
-
-PercentageStackedAreaChart.prototype.onResize = debounce(function(e) {
-  var newWidth = this.container.getBoundingClientRect().width;
-  var newHeight = this.container.getBoundingClientRect().height;
-
-  console.log('resize', this.name);
-
-  newWidth = Math.min(newWidth, CHART_MAX_WIDTH);
-  newHeight = Math.min(newHeight, CHART_MAX_HEIGHT);
-  newHeight = Math.max(newHeight, CHART_MIN_HEIGHT);
-
-  if (newWidth !== this.w) {
-    this.w = newWidth;
-    this.updateWidth();
-  }
-
-  if (newHeight !== this.h) {
-    // this.h = newHeight;
-    // this.updateHeight();
-  }
-
-}, 20);
-
 PercentageStackedAreaChart.prototype.initData = function() {
   ChartBase.prototype.initData.call(this);
 

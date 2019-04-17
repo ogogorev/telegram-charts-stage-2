@@ -29,32 +29,6 @@ export function LineChart(container, data) {
 LineChart.prototype = Object.create(ChartBase.prototype);
 LineChart.prototype.constructor = LineChart;
 
-LineChart.prototype.addListeners = function () {
-  window.addEventListener('resize', this.onResize.bind(this));
-}
-
-LineChart.prototype.onResize = debounce(function(e) {
-  var newWidth = this.container.getBoundingClientRect().width;
-  var newHeight = this.container.getBoundingClientRect().height;
-
-  console.log('resize', this.name);
-
-  newWidth = Math.min(newWidth, CHART_MAX_WIDTH);
-  newHeight = Math.min(newHeight, CHART_MAX_HEIGHT);
-  newHeight = Math.max(newHeight, CHART_MIN_HEIGHT);
-
-  if (newWidth !== this.w) {
-    this.w = newWidth;
-    this.updateWidth();
-  }
-
-  if (newHeight !== this.h) {
-    // this.h = newHeight;
-    // this.updateHeight();
-  }
-
-}, 20);
-
 LineChart.prototype.initData = function() {
   ChartBase.prototype.initData.call(this);
 }
@@ -97,7 +71,7 @@ LineChart.prototype.checkRedrawChartsContent = function(now) {
   if (this.gridPreviewMaxY.nextTick(now)) this.needDrawPreview = true;
 }
 
-LineChart.prototype.drawChartContent1 = function() {
+LineChart.prototype.drawChartContent = function() {
   var barW = Math.round(this.barWidth*this.round)/this.round;
   var sI = Math.max(this.startInd - this.drawIndOffset, 0);
   var eI = Math.min(this.endInd + this.drawIndOffset, this.L);
@@ -112,10 +86,6 @@ LineChart.prototype.drawChartContent1 = function() {
 
   for (var i = 0; i < this.columns.length; i++) {
     var Y = getYCoords(this.bottomY, this.columns[i].values.slice(sI, eI+1), this.getGridMaxForColumn(this.columns[i]));
-
-    // console.log('draw', this.columns[i].values.slice(sI, eI+1));
-    // console.log('line draw max', this.getGridMaxForColumn(this.columns[i]));
-
     this.drawLine(X, Y, this.columns[i].color, this.columns[i].alpha.value);
   }
 }
@@ -124,13 +94,16 @@ LineChart.prototype.getGridMaxForColumn = function(column) {
   return this.gridMaxY.value;
 };
 
-LineChart.prototype.drawLine = function(X, Y, color, alpha=1) {
+LineChart.prototype.drawLine = function(X, Y, color, alpha=1, lineWidth) {
   if (alpha > 0) {
+    alpha = alpha || 1;
+    lineWidth = lineWidth || 2;
     this.ctx.beginPath();
     this.ctx.globalAlpha = alpha;
     this.ctx.strokeStyle = color;
     this.ctx.lineCap = 'round';
-    this.ctx.lineWidth = 2;
+    this.ctx.lineJoin = 'round';
+    this.ctx.lineWidth = lineWidth;
 
     this.ctx.moveTo(X[0], Y[0]);
     for (let i=1; i < X.length; i++) {
@@ -212,6 +185,6 @@ LineChart.prototype.drawPreview = function() {
     // .map(y => this.previewChartY + y);
     .map(y => Math.max(this.previewChartY + y, this.previewChartY));
 
-    this.drawLine(X, Y, this.columns[i].color, this.columns[i].alpha.value);
+    this.drawLine(X, Y, this.columns[i].color, this.columns[i].alpha.value, 1);
   }
 }
