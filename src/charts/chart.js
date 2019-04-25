@@ -409,21 +409,6 @@ ChartBase.prototype.drawOyLabels = function(oyLabels) {
   this.ctx.stroke();
 }
 
-// ChartBase.prototype.xToInd = function(x) {
-//
-//
-//   console.log('=======================');
-//   console.log('x', x/this.barWidth);
-//   console.log('floor', Math.floor(x/this.barWidth));
-//   console.log('ceil', Math.ceil(x/this.barWidth));
-//   console.log('round', Math.round(x/this.barWidth));
-//
-//
-//   var indOnScreen = Math.round(x/this.barWidth);
-//   var ind = this.startInd + indOnScreen;
-//   return ind;
-// }
-
 ChartBase.prototype.initButtons = function() {
   this.buttonsContainer = document.createElement('div');
   this.buttonsContainer.style.width = this.w - CHART_GRID_PADDING*2 + 'px';
@@ -459,6 +444,8 @@ ChartBase.prototype.draw = function() {
 
     this.checkRedrawBg(now);
     this.checkRedrawChartsContent(now);
+
+    this.previewUI.draw();
 
     this.drawSequence();
 

@@ -53,12 +53,12 @@ export function preview(w, h, pixelRatio) {
     leftX = state.left * currW
     rightX = state.right * currW;
 
-    draw();
+    // draw();
   }
 
   canvas.switchTheme = function(theme) {
     setTheme(theme);
-    draw();
+    // draw();
   }
 
   function setTheme(theme) {
@@ -73,10 +73,10 @@ export function preview(w, h, pixelRatio) {
     if (leftX > rightX - PREVIEW_MIN_WIDTH) leftX = rightX - PREVIEW_MIN_WIDTH;
     else if (leftX < 0) leftX = 0;
 
-    requestAnimationFrame(function() {
-      draw();
+    // requestAnimationFrame(function() {
+    //   draw();
       updateState();
-    });
+    // });
   }
 
   function centralZoneUpdate(currWidth) {
@@ -84,20 +84,20 @@ export function preview(w, h, pixelRatio) {
     if (leftX > currW - currWidth) leftX = currW - currWidth;
     rightX = leftX + currWidth;
 
-    requestAnimationFrame(function() {
-      draw();
+    // requestAnimationFrame(function() {
+      // draw();
       updateState();
-    });
+    // });
   }
 
   function rightZoneUpdate(x) {
     if (rightX < leftX + PREVIEW_MIN_WIDTH) rightX = leftX + PREVIEW_MIN_WIDTH;
     else if (rightX > currW) rightX = currW;
 
-    requestAnimationFrame(function() {
-      draw();
+    // requestAnimationFrame(function() {
+    //   draw();
       updateState();
-    });
+    // });
   }
 
   canvas.onmousedown = function(e) {
@@ -176,7 +176,8 @@ export function preview(w, h, pixelRatio) {
 
   var offX = 1;
   var maskOverlayX = 4;
-  function draw() {
+  // function draw() {
+  canvas.draw = function() {
     ctx.clearRect(0, 0, currW, currH);
 
     ctx.beginPath();
@@ -290,7 +291,7 @@ export function preview(w, h, pixelRatio) {
     return x > leftX + PREVIEW_RESIZE_AREA_WIDTH && x < rightX - PREVIEW_RESIZE_AREA_WIDTH;
   }
 
-  requestAnimationFrame(draw);
+  // requestAnimationFrame(draw);
   return canvas;
 }
 

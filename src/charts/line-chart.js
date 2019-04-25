@@ -94,7 +94,7 @@ LineChart.prototype.getGridMaxForColumn = function(column) {
   return this.gridMaxY.value;
 };
 
-LineChart.prototype.drawLine = function(X, Y, color, alpha=1, lineWidth) {
+LineChart.prototype.drawLine = function(X, Y, color, alpha, lineWidth) {
   if (alpha > 0) {
     alpha = alpha || 1;
     lineWidth = lineWidth || 2;
