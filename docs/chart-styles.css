@@ -1,0 +1,106 @@
+html {
+  font-family: 'Helvetica';
+}
+
+.night-theme {
+  background-color: #242f3e;
+}
+
+#app-container {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-around;
+}
+
+#mode {
+  border: none;
+  background-color: transparent;
+  color: #36A8F1;
+  margin: auto;
+  cursor: pointer;
+  font-size: 18px;
+}
+
+.button-container {
+  display: 100%;
+  text-align: center;
+  margin-bottom: 50px;
+}
+
+.chart {
+  margin-bottom: 50px;
+}
+
+.chart-header {
+  display: flex;
+  justify-content: space-between;
+}
+
+.chart-header h4 {
+  margin: auto 0px;
+}
+
+.chart-header h5 {
+  margin: auto 0px;
+}
+
+.point-info {
+  position: absolute;
+
+  /* box-shadow: 0 0 20px 1px grey; */
+  border: 2px solid #0000001A;
+  border-radius: 8px;
+  padding: 8px;
+  background-color: white;
+  font-size: 12px;
+
+  /* z-Index: -1; */
+  pointer-events: none;
+}
+
+.point-info-title {
+  /* font-weight: bold; */
+  margin: 0 0 10px 0;
+}
+
+.point-info-row {
+  display: flex;
+  justify-content: space-between;
+}
+
+.point-info-row-value {
+  font-weight: bold;
+  margin-left: 15px;
+}
+
+.buttons-container {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.chart-button {
+  display: inline-flex;
+  font-weight: bold;
+  color: white;
+  border: 0px solid #FFFFFF;
+  border-radius: 20px;
+  padding: 10px;
+  margin-right: 10px;
+  margin-bottom: 10px;
+  cursor: pointer;
+  /* border-width: 10px; */
+
+  /* border-radius: 50%;
+  background-color: #fff;
+  border: 1px solid #3cc23f;
+  transition: border-width 0.3s linear;
+  box-sizing: border-box; */
+
+
+  /* transition: border-width 0.3s; */
+}
+
+.chart-button img {
+  width: 16px;
+  margin-right: 4px;
+}
