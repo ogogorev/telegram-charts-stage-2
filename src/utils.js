@@ -48,6 +48,26 @@ export function debounce(func, wait, immediate) {
 	};
 }
 
+export function throttle(func, limit) {
+  var timer = null;
+  var context = null;
+  var args = null;
+
+  var invoke = function() {
+    func.apply(context, args);
+    timer = null;
+  }
+
+  return function() {
+    context = this;
+    args = arguments;
+
+    if (!timer) {
+      timer = setTimeout(invoke, limit);
+    }
+  }
+}
+
 export function getGridValuesByMax(max) { // FIXME Отвязать от 6
   const k = getStepForGridValues(max);
   return [0, 1, 2, 3, 4, 5, 6].map(i => i*k/5);

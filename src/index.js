@@ -22,12 +22,12 @@ function main() {
 
   // console.log(chart_data_old_contest);
 
-  // charts.push(lineChart(appContainer, chart_data_old_contest[4], 'Line chart'));
+  // charts.push(lineChart(appContainer, chart_data_old_contest[0], 'Line chart'));
   charts.push(lineChart(appContainer, chart_data1, 'Line chart'));
-  charts.push(twoAxesLineChart(appContainer, chart_data2, 'Two axes line chart'));
-  charts.push(stackedBarChart(appContainer, chart_data3, 'Stacked bar chart'));
-  charts.push(barChart(appContainer, chart_data4, 'Bar chart'));
-  charts.push(percentageStackedAreaChart(appContainer, chart_data5, 'Stacked area chart'));
+  // charts.push(twoAxesLineChart(appContainer, chart_data2, 'Two axes line chart'));
+  // charts.push(stackedBarChart(appContainer, chart_data3, 'Stacked bar chart'));
+  // charts.push(barChart(appContainer, chart_data4, 'Bar chart'));
+  // charts.push(percentageStackedAreaChart(appContainer, chart_data5, 'Stacked area chart'));
 
   var isDayMode = true;
   var button = document.getElementById('mode');
@@ -55,74 +55,37 @@ function main() {
 
 window.onload = function() {
   main();
+  // testCanvas();
   // test();
 }
 
-function testCanvas() {
+function test() {
 
-  var pixelRatio = window.devicePixelRatio;
-
-  var canvas = document.createElement('canvas');
-  var size = 400;
-
-  canvas.style.width = size + 'px'
-  canvas.style.height = size + 'px'
-
-  canvas.width = size * pixelRatio;
-  canvas.height = size * pixelRatio;
-
-
-  console.log(canvas.getBoundingClientRect());
-  var ctx = canvas.getContext('2d');
-  ctx.scale(pixelRatio, pixelRatio);
-
-  // var lastY = 0;
-
-  ctx.beginPath();
-  ctx.lineWidth = 2;
-  ctx.strokeStyle = '#FF0000';
-  // ctx.rect(10, 10, 100, 100)
-
-  ctx.moveTo(0, 50)
-  ctx.lineTo(50, 100)
-  ctx.lineTo(100, 25)
-  ctx.lineTo(150, 100)
-  ctx.lineTo(200, 25)
-  ctx.lineTo(250, 100)
-  ctx.lineTo(300, 25)
-
-  ctx.stroke();
-  document.body.append(canvas);
 }
 
+function testCanvas() {
+  var size = 400;
+  var canvas = document.createElement('canvas');
+  canvas.width = size;
+  canvas.height = size;
+  var ctx = canvas.getContext('2d');
 
-function test() {
-  function Parent(name) {
-    this.name = name;
+  function draw() {
+    requestAnimationFrame(function() {
+      ctx.clearRect(0, 0, size, size)
 
-    this.div = document.createElement('div')
-    this.div.innerHTML = this.name;
-    document.body.append(this.div);
+      var x = Math.floor(Math.random() * size - size/2);
+      var y = Math.floor(Math.random() * size - size/2);
 
-    window.addEventListener('resize', this.onResize.bind(this))
+      ctx.beginPath();
+      ctx.strokeStyle = '#FF0000';
+      ctx.rect(x, y, 100, 100)
+      ctx.stroke();
+
+      draw();
+    });
   }
+  draw();
 
-  Parent.prototype.onResize = function() {
-    this.div.innerHTML = this.name + 'resized';
-  }
-
-  function Child1(name) {
-    Parent.apply(this, arguments);
-  }
-  Child1.prototype = Object.create(Parent.prototype);
-  Child1.prototype.constructor = Child1;
-
-  function Child2(name) {
-    Parent.apply(this, arguments);
-  }
-  Child2.prototype = Object.create(Parent.prototype);
-  Child2.prototype.constructor = Child2;
-
-  var c1 = new Child1('child 1 ');
-  var c2 = new Child1('child 2 ');
+  document.body.append(canvas);
 }

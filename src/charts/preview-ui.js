@@ -106,27 +106,30 @@ export function preview(w, h, pixelRatio) {
     if (isLeftZone(e.clientX - canvas.getBoundingClientRect().x)) {
       var offsetLeftX = leftX - e.clientX;
 
-      onmousemove = function(e) { // TODO Отвязать от window! Привязать к основному контейнеру
+      var onMouseMove = function(e) { // TODO Отвязать от window! Привязать к основному контейнеру
         leftX = e.clientX + offsetLeftX;
         leftZoneUpdate();
-      };
+      }
+      onmousemove = onMouseMove;
     }
     else if (isCentralZone(e.clientX - canvas.getBoundingClientRect().x)) {
       var offsetLeftX = leftX - e.clientX;
       var currWidth = rightX - leftX;
 
-      onmousemove = function(e) {
+      var onMouseMove = function(e) {
         leftX = e.clientX + offsetLeftX;
         centralZoneUpdate(currWidth);
-      };
+      }
+      onmousemove = onMouseMove;
     }
     else if (isRightZone(e.clientX - canvas.getBoundingClientRect().x)) {
       var offsetRightX = rightX - e.clientX;
 
-      onmousemove = function(e) {
+      var onMouseMove = function(e) {
         rightX = e.clientX + offsetRightX;
         rightZoneUpdate();
-      };
+      }
+      onmousemove = onMouseMove;
     }
 
     onmouseup = function(e) {
