@@ -49,8 +49,8 @@ export function ChartBase(container, data, name) {
   this.initCanvas();
   this.initPreviewUI();
 
-  this.previewUILeftX = 0.8;
-  this.previewUIRightX = 1;
+  this.previewUILeftX = 0.8; // FIXME Move to chart initial data
+  this.previewUIRightX = 1; // FIXME Move to chart initial data
 
   this.data = data;
 
@@ -106,15 +106,18 @@ ChartBase.prototype.initCanvas = function () {
   this.ctx.scale(this.pixelRatio, this.pixelRatio);
 }
 
+ChartBase.prototype.onActionUpdate = function(action) {
+  this.previewUIState = action;
+  this.startUpdate();
+}
+
 ChartBase.prototype.initPreviewUI = function () {
-  this.previewUI = preview(this.w - CHART_GRID_PADDING*2, PREVIEW_HEIGHT, this.pixelRatio);
+  this.previewUI = preview(this.w - CHART_GRID_PADDING*2, PREVIEW_HEIGHT, this.pixelRatio, this.onActionUpdate.bind(this));
   this.previewUI.style.position = 'absolute';
   this.previewUI.style.top = this.h - PREVIEW_INNER_MARGIN_TOP + 'px';
   this.previewUI.style.left = CHART_GRID_PADDING + 'px';
 
-  this.previewUI.onupdate = function(state) {
-    this.updateRange(state.left, state.right);
-  }.bind(this);
+  this.previewUIState = null;
 
   this.chartContainer.append(this.previewUI);
 }
@@ -181,7 +184,7 @@ ChartBase.prototype.initHeader = function () {
 
   this.dateRange = document.createElement('h5');
   // this.dateRange.id = this.name + 'date-range';
-  this.dateRange.innerHTML = 'Sat, 11 Apr 2020 - Mon, 12 Mar 2021';
+  this.dateRange.innerHTML = 'Sat, 11 Apr 2020 - Mon, 12 Mar 2021'; // FIXME Init with initial data
   this.header.append(this.dateRange);
 
   this.chartContainer.append(this.header);
@@ -215,89 +218,23 @@ ChartBase.prototype.init = function() {
   this.initOyProps();
   this.initPreviewChartProps();
 
-  //test
-  this.addUpdateButton();
-
   // this.drawpreview();
   this.initInfo();
   this.initButtons();
   this.update();
 }
 
-ChartBase.prototype.addUpdateButton = function() { // delete me
-  var bm = document.createElement('button');
-  var br = document.createElement('button');
-  br.innerHTML = 'resize';
-  bm.innerHTML = 'move';
-  bm.onclick = function() {
-    this.manualMove();
-  }.bind(this)
-  br.onclick = function() {
-    this.manualResize();
-  }.bind(this)
-  this.container.append(br);
-  this.container.append(bm);
-}
-
-ChartBase.prototype.manualResize = function() {
-
-  var step = -0.03;
-  var range = this.previewUIRightX - this.previewUILeftX;
-
-  var interval = setInterval(function() {
-    // if (this.previewUILeftX + step < 0 || this.previewUILeftX + step > 0.8) {
-    //   step = -step;
-    // }
-    // this.previewUILeftX += step
-
-    if (this.previewUIRightX + step > 1 || this.previewUIRightX + step < this.previewUILeftX + range) {
-      step = -step;
-    }
-    this.previewUIRightX += step
-
-    this.startUpdate();
-    // this.update();
-  }.bind(this), 10);
-
-  setTimeout(() => {
-    clearInterval(interval);
-    console.log('interval cleared');
-  }, 10000);
-
-}
-
-ChartBase.prototype.manualMove = function() {
-
-  var step = -0.04;
-  var range = this.previewUIRightX - this.previewUILeftX;
-
-  var interval = setInterval(function() {
-    if (this.previewUILeftX + step < 0 || this.previewUILeftX + step > 1 - range) {
-      step = -step;
-    }
-    this.previewUILeftX += step
-    this.previewUIRightX = this.previewUILeftX + range;
-    this.startUpdate();
-    // this.update();
-  }.bind(this), 10);
-
-  setTimeout(() => {
-    clearInterval(interval);
-    console.log('interval cleared');
-
-  }, 10000);
-
-}
-
 ChartBase.prototype.initDrawProps = function() {
   this.initColors(CHART_DAY_THEME);
+
+  this.mouseX = null;
+  this.mouseY = null;
 
   this.drawIndOffset = 10;
 
   this.bottomY = this.h - OXLABELS_HEIGHT - PREVIEW_CHART_HEIGHT - PREVIEW_CHART_MARGIN; // FIXME rename to mainChartY
   this.oxLabelsBottomY = this.h - PREVIEW_CHART_HEIGHT - PREVIEW_CHART_MARGIN; // FIXME rename to oxLabelsY
 
-  // this.needRedraw = false;
   this.needRedraw = true;
   this.needDrawPreview = true;
 
@@ -370,13 +307,6 @@ ChartBase.prototype.select = function(x, y) {
   });
 }
 
-ChartBase.prototype.updateRange = function(left, right) {
-  this.previewUILeftX = left;
-  this.previewUIRightX = right;
-  // this.update();
-  this.startUpdate();
-}
-
 ChartBase.prototype.drawBg = function() {
   this.drawOxLabels(this.staticOxLabels, this.oxLabels.length - 1);
   this.drawOxLabels(this.dynamicOxLabels, this.oxLabels.length - 1 - Math.floor(this.dynamicOxLabels.step/2)); // Говно какое-то
@@ -399,10 +329,7 @@ ChartBase.prototype.calculateOxLabelsOffsetX = function () {
 };
 
 ChartBase.prototype.drawOxLabels = function(oxLabelsProps, lastInd) {
-
   if (oxLabelsProps.alpha.value <= 0) return;
-
-  // if (this.name) console.log('draw ox', this.name);
 
   while(lastInd > this.endInd) lastInd -= oxLabelsProps.step;
 
@@ -421,15 +348,7 @@ ChartBase.prototype.updateOxLabels = function() {
   while (step > p) p *= 2;
   step = p;
 
-
-  // if (this.name === 'Stacked bar chart') {
-  //   console.log('update ox', this.name);
-  //   console.log('step', step);
-  //   console.log('curr step', this.currOxLabelsStep);
-  // }
-
   if (step === this.currOxLabelsStep) return false;
-
 
   var now = performance.now();
 
@@ -448,7 +367,6 @@ ChartBase.prototype.updateOxLabels = function() {
     this.currOxLabelsStep /= 2;
   }
 
-  // this.draw();
   return true;
 }
 
@@ -559,7 +477,6 @@ ChartBase.prototype.updateY = function () {
   if (this.gridStepY !== newGridStepY) {
     var now = performance.now();
 
-    // console.log('new grid step', newGridStepY)
     this.gridMaxY.set(newGridStepY*6, now, true);
 
     if (
@@ -590,20 +507,30 @@ ChartBase.prototype.onMouseEnter = function(e) {
 ChartBase.prototype.onMouseMove = function (e) {
   if (e.layerY <= this.bottomY) {
     if (e.layerX > CHART_GRID_PADDING && e.layerX < this.w - CHART_GRID_PADDING) {
-      this.select(e.layerX, e.layerY)
+      this.mouseX = e.layerX;
+      this.mouseY = e.layerY;
     }
   }
   else {
     this.selectedInd = -1;
   }
-  this.draw();
+
+  if (this.previewUIState < 1) {
+    this.startUpdate();
+  }
 }
 
 ChartBase.prototype.onMouseLeave = function () {
   this.selectedInd = -1;
   this.canvas.onmousemove = null;
   this.canvas.onmouseleave = null;
-  this.draw();
+
+  this.mouseX = null;
+  this.mouseY = null;
+
+  if (this.previewUIState < 1) {
+    this.startUpdate();
+  }
 }
 
 ChartBase.prototype.getScreenXByInd = function (i, step=this.barWidth, offset=this.offsetX) {
@@ -617,6 +544,15 @@ ChartBase.prototype.getIndByScreenX = function (x, step=this.barWidth, offset=th
 ChartBase.prototype.update = function() {
   requestAnimationFrame(function() {
 
+  if (this.previewUIState > 0) {
+    var state = this.previewUI.update();
+
+    if (this.previewUILeftX !== state.left || this.previewUIRightX !== state.right) {
+      this.previewUILeftX = state.left;
+      this.previewUIRightX = state.right;
+    }
+  }
+
   this.startInd = Math.max(Math.ceil(this.previewUILeftX * this.L) - 1, 0);
   this.endInd = Math.ceil(this.previewUIRightX * this.L);
   this.barWidth = this.gridWidth/(this.L*(this.previewUIRightX-this.previewUILeftX));
@@ -626,7 +562,9 @@ ChartBase.prototype.update = function() {
   this.calculateOxLabelsOffsetX();
   this.updateY();
 
-  // this.update();
+  if (this.mouseX) { // FIXME Move to drawSelected
+    this.select(this.mouseX, this.mouseY)
+  }
 
   // ------------------- DRAW -------------------
 
@@ -636,11 +574,8 @@ ChartBase.prototype.update = function() {
   this.needRedraw = false;
 
   if (this.updateOxLabels()) this.needRedraw = true;
-
   this.checkRedrawBg(now);
   this.checkRedrawChartsContent(now);
-
-  this.previewUI.draw();
 
   this.drawSequence();
 
@@ -649,9 +584,7 @@ ChartBase.prototype.update = function() {
     this.drawPreview();
   }
 
-  if (this.needRedraw) {
-    // this.needRedraw = false;
-    // this.draw();
+  if (this.needRedraw || this.previewUIState > 0) {
     this.update();
   }
 
@@ -664,35 +597,6 @@ ChartBase.prototype.startUpdate = function () {
     this.update();
   }
 };
-
-ChartBase.prototype.draw = function() {
-  this.update();
-  return;
-  // requestAnimationFrame(function() {
-  //   this.ctx.clearRect(0, 0, this.w, this.previewChartY);
-  //
-  //   if (this.updateOxLabels()) this.needRedraw = true;
-  //
-  //   var now = performance.now();
-  //
-  //   this.checkRedrawBg(now);
-  //   this.checkRedrawChartsContent(now);
-  //
-  //   this.previewUI.draw();
-  //
-  //   this.drawSequence();
-  //
-  //   if (this.needDrawPreview) {
-  //     this.needDrawPreview = false;
-  //     this.drawPreview();
-  //   }
-  //
-  //   if (this.needRedraw) {
-  //     this.needRedraw = false;
-  //     this.draw();
-  //   }
-  // }.bind(this));
-}
 
 export function calculateOffsetX(w, padding, left, right) {
   return w + padding - right*w/(right-left);
